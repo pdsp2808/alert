@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>LU-Alert Monitor</title>
+  <title>LU-Alert & Wetter Monitor</title>
   <style>
     :root {
       --bg-color: #f8fafc;
@@ -83,6 +83,48 @@
     .theme-btn {
       font-size: 1rem;
       padding: 5px 10px;
+    }
+
+    /* Wetter Widget Styling */
+    .weather-widget {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .weather-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .weather-icon {
+      font-size: 2.2rem;
+    }
+
+    .weather-temp {
+      font-size: 1.5rem;
+      font-weight: bold;
+    }
+
+    .weather-desc {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+
+    .weather-right {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      display: flex;
+      gap: 16px;
     }
 
     .legend-toggle-btn {
@@ -293,6 +335,21 @@
     </div>
   </header>
 
+  <!-- Wetter Widget -->
+  <div class="weather-widget" id="weather-widget">
+    <div class="weather-left">
+      <span class="weather-icon" id="w-icon">⏳</span>
+      <div>
+        <div class="weather-temp" id="w-temp">-- °C</div>
+        <div class="weather-desc" id="w-desc">Lade Wetter für Reisdorf...</div>
+      </div>
+    </div>
+    <div class="weather-right">
+      <div><span id="w-wind-label">Wind</span>: <strong id="w-wind">-- km/h</strong></div>
+      <div><span id="w-hum-label">Feuchte</span>: <strong id="w-hum">--%</strong></div>
+    </div>
+  </div>
+
   <button class="legend-toggle-btn" onclick="toggleLegend()">
     <span id="legend-btn-text">ℹ️ Warnstufen-Legende anzeigen</span>
     <span id="legend-icon">▼</span>
@@ -429,6 +486,7 @@
         }
       });
       updateLegendTexts();
+      loadWeather();
       if (rawXmlData) {
         renderAlerts(rawXmlData);
       }
@@ -438,7 +496,6 @@
       const btnText = document.getElementById("legend-btn-text");
       const isOpen = document.getElementById("legend-content").classList.contains("open");
       
-      // Stufen-Bezeichnungen im Badge je nach Sprache (DE -> S, EN -> L, FR -> N)
       const prefix = currentLang === 'de' ? 'S' : currentLang === 'en' ? 'L' : 'N';
       document.getElementById("badge-n1").textContent = prefix + '1';
       document.getElementById("badge-n2").textContent = prefix + '2';
@@ -446,28 +503,21 @@
 
       document.getElementById("th-desc").textContent = currentLang === 'de' ? 'Beschreibung' : currentLang === 'fr' ? 'Description' : 'Description';
 
-      // Offizielle Originaltexte exakt aus den Bildvorgaben für DE, FR und EN
       if (currentLang === 'de') {
         btnText.textContent = isOpen ? "ℹ️ Warnstufen-Legende ausblenden" : "ℹ️ Warnstufen-Legende anzeigen";
         
         document.getElementById("leg-d-title").textContent = "Akute Gefahr / Sofortiges Handeln";
         document.getElementById("leg-d-sub").textContent = "Warnung die sofortiges Handeln erfordert";
-
         document.getElementById("leg-n1-title").textContent = "Wachsamkeitsstufe rot / Äußerste Vorsicht (hohes Risiko / große Gefahr)";
         document.getElementById("leg-n1-sub").textContent = "Die höchste Warnstufe";
-
         document.getElementById("leg-n2-title").textContent = "Wachsamkeitsstufe orange / Seien Sie vorsichtig (mittleres Risiko / Gefahr)";
         document.getElementById("leg-n2-sub").textContent = "Die mittlere Warnstufe";
-
         document.getElementById("leg-n3-title").textContent = "Wachsamkeitsstufe gelb / Seien Sie aufmerksam (geringes Risiko / potentielle Gefahr)";
         document.getElementById("leg-n3-sub").textContent = "Die niedrigste Warnstufe";
-
         document.getElementById("leg-a-title").textContent = "Vermissten- / Entführungsmeldung";
         document.getElementById("leg-a-sub").textContent = "Warnung bei Vermissten- / Entführungssituationen";
-
         document.getElementById("leg-i-title").textContent = "Information (kein Risiko / keine Gefahr)";
         document.getElementById("leg-i-sub").textContent = "Für Informationsmeldungen";
-
         document.getElementById("leg-t-title").textContent = "Test (kein Risiko / keine Gefahr)";
         document.getElementById("leg-t-sub").textContent = "Für Test- und Übungszwecke";
 
@@ -476,22 +526,16 @@
         
         document.getElementById("leg-d-title").textContent = "Danger imminent / Action immédiate";
         document.getElementById("leg-d-sub").textContent = "Alerte nécessitant une action immédiate";
-
         document.getElementById("leg-n1-title").textContent = "Niveau de vigilance rouge / Vigilance absolue (risque élevé / danger important)";
         document.getElementById("leg-n1-sub").textContent = "Le niveau d’alerte le plus élevé";
-
         document.getElementById("leg-n2-title").textContent = "Niveau de vigilance orange / Soyez prudents (risque moyen / danger)";
         document.getElementById("leg-n2-sub").textContent = "Le niveau d’alerte moyen";
-
         document.getElementById("leg-n3-title").textContent = "Niveau de vigilance jaune / Soyez attentifs (faible risque / danger potentiel)";
         document.getElementById("leg-n3-sub").textContent = "Le niveau d’alerte le plus bas";
-
         document.getElementById("leg-a-title").textContent = "Disparition / enlèvement";
         document.getElementById("leg-a-sub").textContent = "Utilisé pour des alertes de disparition / d'enlèvement";
-
         document.getElementById("leg-i-title").textContent = "Information (pas de risque / pas de danger)";
         document.getElementById("leg-i-sub").textContent = "Utilisé pour des messages d’information";
-
         document.getElementById("leg-t-title").textContent = "Test (pas de risque / pas de danger)";
         document.getElementById("leg-t-sub").textContent = "Utilisé pour des messages de test et d'exercice";
 
@@ -500,24 +544,53 @@
         
         document.getElementById("leg-d-title").textContent = "Imminent danger / Immediate action";
         document.getElementById("leg-d-sub").textContent = "Alert requiring immediate action";
-
         document.getElementById("leg-n1-title").textContent = "Awareness level red / Utmost vigilance (high risk / significant danger)";
         document.getElementById("leg-n1-sub").textContent = "The highest alert level";
-
         document.getElementById("leg-n2-title").textContent = "Awareness level orange / Be careful (medium risk / danger)";
         document.getElementById("leg-n2-sub").textContent = "The medium alert level";
-
         document.getElementById("leg-n3-title").textContent = "Awareness level yellow / Be aware (low risk / potential danger)";
         document.getElementById("leg-n3-sub").textContent = "The lowest alert level";
-
         document.getElementById("leg-a-title").textContent = "Missing person / kidnapping alert";
         document.getElementById("leg-a-sub").textContent = "Used for missing person / kidnapping alerts";
-
         document.getElementById("leg-i-title").textContent = "Information (no risk / no danger)";
         document.getElementById("leg-i-sub").textContent = "Used for information messages";
-
         document.getElementById("leg-t-title").textContent = "Test (no risk / no danger)";
         document.getElementById("leg-t-sub").textContent = "Used for test and exercice messages";
+      }
+    }
+
+    // --- Wetter laden (Reisdorf Koordinaten: 49.85, 6.27) ---
+    async function loadWeather() {
+      try {
+        const res = await fetch("https://api.open-meteo.com/v1/forecast?latitude=49.85&longitude=6.27&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m");
+        const data = await res.json();
+        
+        const temp = data.current.temperature_2m;
+        const hum = data.current.relative_humidity_2m;
+        const wind = data.current.wind_speed_10m;
+        const code = data.current.weather_code;
+
+        document.getElementById("w-temp").textContent = temp + " °C";
+        document.getElementById("w-wind").textContent = wind + " km/h";
+        document.getElementById("w-hum").textContent = hum + "%";
+
+        document.getElementById("w-wind-label").textContent = currentLang === 'de' ? 'Wind' : currentLang === 'fr' ? 'Vent' : 'Wind';
+        document.getElementById("w-hum-label").textContent = currentLang === 'de' ? 'Feuchte' : currentLang === 'fr' ? 'Humidité' : 'Humidity';
+
+        // Wetterbeschreibung & Emoji nach WMO Code
+        let desc = "Klar";
+        let icon = "☀️";
+        if (code >= 1 && code <= 3) { desc = currentLang === 'de' ? 'Teilweise bewölkt' : currentLang === 'fr' ? 'Partiellement nuageux' : 'Partly cloudy'; icon = "⛅"; }
+        else if (code >= 45 && code <= 48) { desc = currentLang === 'de' ? 'Nebel' : currentLang === 'fr' ? 'Brouillard' : 'Foggy'; icon = "🌫️"; }
+        else if (code >= 51 && code <= 67) { desc = currentLang === 'de' ? 'Regen' : currentLang === 'fr' ? 'Pluie' : 'Rain'; icon = "🌧️"; }
+        else if (code >= 71 && code <= 77) { desc = currentLang === 'de' ? 'Schnee' : currentLang === 'fr' ? 'Neige' : 'Snow'; icon = "❄️"; }
+        else if (code >= 95) { desc = currentLang === 'de' ? 'Gewitter' : currentLang === 'fr' ? 'Orage' : 'Thunderstorm'; icon = "⚡"; }
+
+        document.getElementById("w-desc").textContent = (currentLang === 'de' ? 'Reisdorf: ' : currentLang === 'fr' ? 'Reisdorf : ' : 'Reisdorf: ') + desc;
+        document.getElementById("w-icon").textContent = icon;
+
+      } catch (e) {
+        document.getElementById("w-desc").textContent = "Wetterdaten nicht verfügbar";
       }
     }
 
@@ -621,7 +694,6 @@
         });
       } catch(e) {}
 
-      // Texte für Gültigkeit je nach Sprache
       const labelValid = currentLang === 'de' ? 'Gültig' : currentLang === 'fr' ? 'Valable' : 'Valid';
       const labelUntil = currentLang === 'de' ? 'bis' : currentLang === 'fr' ? 'au' : 'until';
       const labelSource = currentLang === 'de' ? 'Quelle' : currentLang === 'fr' ? 'Source' : 'Source';
@@ -654,8 +726,12 @@
 
     initTheme();
     updateLegendTexts();
+    loadWeather();
     loadAlerts();
-    setInterval(loadAlerts, 120000);
+    setInterval(() => {
+      loadAlerts();
+      loadWeather();
+    }, 120000);
   </script>
 </body>
 </html>
