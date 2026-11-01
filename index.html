@@ -5,71 +5,163 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>LU-Alert Monitor</title>
   <style>
+    :root {
+      /* Tagmodus Variablen */
+      --bg-color: #f8fafc;
+      --card-bg: #ffffff;
+      --text-color: #0f172a;
+      --text-muted: #64748b;
+      --border-color: #e2e8f0;
+      --badge-bg: #f1f5f9;
+      --badge-border: #cbd5e1;
+    }
+
+    body.dark-mode {
+      /* Nachtmodus Variablen */
+      --bg-color: #0f172a;
+      --card-bg: #1e293b;
+      --text-color: #f8fafc;
+      --text-muted: #94a3b8;
+      --border-color: #334155;
+      --badge-bg: #0f172a;
+      --badge-border: #334155;
+    }
+
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
+      transition: background-color 0.3s, color 0.3s, border-color 0.3s;
     }
+
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background-color: #0f172a;
-      color: #f8fafc;
+      background-color: var(--bg-color);
+      color: var(--text-color);
       max-width: 800px;
       margin: 0 auto;
       padding: 20px;
     }
+
     header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      border-bottom: 2px solid #334155;
-      padding-bottom: 12px;
+      border-bottom: 2px solid var(--border-color);
+      padding-bottom: 16px;
       margin-bottom: 24px;
+      flex-wrap: wrap;
+      gap: 12px;
     }
+
     h1 {
       font-size: 1.4rem;
+      font-weight: 700;
+    }
+
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .lang-btn, .theme-btn {
+      background-color: var(--card-bg);
+      color: var(--text-color);
+      border: 1px solid var(--border-color);
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.85rem;
       font-weight: 600;
     }
-    .status-badge {
-      font-size: 0.75rem;
-      background-color: #1e293b;
-      border: 1px solid #334155;
-      color: #94a3b8;
-      padding: 4px 8px;
-      border-radius: 4px;
+
+    .lang-btn.active {
+      background-color: #38bdf8;
+      color: #0f172a;
+      border-color: #38bdf8;
     }
-    .alert-card {
-      background-color: #1e293b;
-      border-left: 6px solid #eab308;
+
+    .theme-btn {
+      font-size: 1rem;
+      padding: 5px 10px;
+    }
+
+    .status-badge {
+      font-size: 0.8rem;
+      background-color: var(--badge-bg);
+      border: 1px solid var(--badge-border);
+      color: var(--text-muted);
+      padding: 6px 12px;
       border-radius: 6px;
+      margin-bottom: 20px;
+      display: inline-block;
+    }
+
+    /* Offizielle LU-Alert Farbcodierungen für die Karten */
+    .alert-card {
+      background-color: var(--card-bg);
+      border-radius: 8px;
       padding: 20px;
       margin-bottom: 16px;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      border-top: 1px solid var(--border-color);
+      border-right: 1px solid var(--border-color);
+      border-bottom: 1px solid var(--border-color);
     }
+
+    /* Dynamische linke Rahmenfarben & Badge-Farben nach Legende */
+    .level-D  { border-left: 6px solid #8b5cf6; } /* Violett: Danger */
+    .level-N1 { border-left: 6px solid #dc2626; } /* Rot: Vigilance rouge */
+    .level-N2 { border-left: 6px solid #ea580c; } /* Orange: Vigilance orange */
+    .level-N3 { border-left: 6px solid #ca8a04; } /* Gelb: Vigilance jaune */
+    .level-A  { border-left: 6px solid #f97316; } /* Vermisstenmeldung */
+    .level-I  { border-left: 6px solid #65a30d; } /* Information: Grün */
+    .level-T  { border-left: 6px solid #475569; } /* Test: Grau */
+
     .meta {
       font-size: 0.85rem;
-      color: #94a3b8;
-      margin-bottom: 10px;
+      color: var(--text-muted);
+      margin-bottom: 12px;
       display: flex;
-      gap: 12px;
+      gap: 10px;
       flex-wrap: wrap;
+      align-items: center;
     }
+
     .meta span {
-      background: #0f172a;
-      padding: 2px 6px;
-      border-radius: 3px;
+      background: var(--badge-bg);
+      padding: 3px 8px;
+      border-radius: 4px;
+      border: 1px solid var(--border-color);
     }
+
+    .level-tag {
+      font-weight: bold;
+      color: #fff !important;
+      border: none !important;
+    }
+    .tag-D  { background-color: #8b5cf6 !important; }
+    .tag-N1 { background-color: #dc2626 !important; }
+    .tag-N2 { background-color: #ea580c !important; }
+    .tag-N3 { background-color: #ca8a04 !important; }
+    .tag-A  { background-color: #f97316 !important; }
+    .tag-I  { background-color: #65a30d !important; }
+    .tag-T  { background-color: #475569 !important; }
+
     .headline {
-      font-size: 1.2rem;
+      font-size: 1.25rem;
       font-weight: 700;
       margin-bottom: 12px;
-      color: #f1f5f9;
+      color: var(--text-color);
     }
+
     .description {
       font-size: 0.95rem;
       line-height: 1.6;
-      color: #cbd5e1;
+      color: var(--text-color);
     }
+
     .description img {
       max-width: 200px;
       height: auto;
@@ -77,25 +169,31 @@
       margin: 12px 0;
       display: block;
     }
+
     .description ul {
       margin-left: 20px;
       margin-top: 8px;
       margin-bottom: 8px;
     }
+
     .description a {
       color: #38bdf8;
       text-decoration: none;
     }
+
     .description a:hover {
       text-decoration: underline;
     }
+
     .loading, .error {
       text-align: center;
       padding: 40px;
-      background: #1e293b;
-      border-radius: 6px;
-      color: #94a3b8;
+      background: var(--card-bg);
+      border-radius: 8px;
+      color: var(--text-muted);
+      border: 1px solid var(--border-color);
     }
+
     .error {
       color: #f87171;
     }
@@ -105,8 +203,15 @@
 
   <header>
     <h1>LU-Alert Monitor</h1>
-    <div id="status" class="status-badge">Aktualisiere...</div>
+    <div class="controls">
+      <button class="lang-btn active" onclick="setLanguage('de')">DE</button>
+      <button class="lang-btn" onclick="setLanguage('fr')">FR</button>
+      <button class="lang-btn" onclick="setLanguage('en')">EN</button>
+      <button class="theme-btn" id="theme-toggle" onclick="toggleTheme()">🌙</button>
+    </div>
   </header>
+
+  <div id="status" class="status-badge">Aktualisiere...</div>
 
   <main id="alerts-container">
     <div class="loading">Lade aktuelle Meldungen von LU-Alert...</div>
@@ -114,6 +219,40 @@
 
   <script>
     const WORKER_URL = "https://lu-alert-proxy.patrick95tuga.workers.dev/";
+    let currentLang = "de";
+    let rawXmlData = null;
+
+    function initTheme() {
+      const currentHour = new Date().getHours();
+      const isNight = currentHour >= 22 || currentHour < 6;
+
+      if (isNight) {
+        document.body.classList.add("dark-mode");
+        document.getElementById("theme-toggle").textContent = "☀️";
+      } else {
+        document.body.classList.remove("dark-mode");
+        document.getElementById("theme-toggle").textContent = "🌙";
+      }
+    }
+
+    function toggleTheme() {
+      document.body.classList.toggle("dark-mode");
+      const isDark = document.body.classList.contains("dark-mode");
+      document.getElementById("theme-toggle").textContent = isDark ? "☀️" : "🌙";
+    }
+
+    function setLanguage(lang) {
+      currentLang = lang;
+      document.querySelectorAll('.lang-btn').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.textContent.toLowerCase() === lang) {
+          btn.classList.add('active');
+        }
+      });
+      if (rawXmlData) {
+        renderAlerts(rawXmlData);
+      }
+    }
 
     async function loadAlerts() {
       const container = document.getElementById('alerts-container');
@@ -124,59 +263,10 @@
         if (!response.ok) throw new Error(`HTTP Error ${response.status}`);
         
         const data = await response.json();
+        if (data.error) throw new Error(data.error);
 
-        if (data.error) {
-          throw new Error(data.error);
-        }
-
-        // XML aus der Worker-Antwort parsen
-        const parser = new DOMParser();
-        const xmlDoc = parser.parseFromString(data.raw_xml, "text/xml");
-        const infos = xmlDoc.getElementsByTagName("info");
-
-        if (infos.length === 0) {
-          container.innerHTML = "<div class='loading'>Aktuell liegen keine aktiven Warnungen vor.</div>";
-          statusBadge.textContent = "Stand: " + new Date().toLocaleTimeString("de-DE");
-          return;
-        }
-
-        // Deutschsprachigen Block suchen, sonst ersten verfügbaren
-        let targetInfo = null;
-        for (let info of infos) {
-          const lang = info.getElementsByTagName("language")[0]?.textContent;
-          if (lang === "de" || lang === "de-DE") {
-            targetInfo = info;
-            break;
-          }
-        }
-        if (!targetInfo) targetInfo = infos[0];
-
-        // Daten extrahieren
-        const headline = targetInfo.getElementsByTagName("headline")[0]?.textContent || "Warnmeldung";
-        const description = targetInfo.getElementsByTagName("description")[0]?.textContent || "";
-        const effective = targetInfo.getElementsByTagName("effective")[0]?.textContent || "";
-        const sender = xmlDoc.getElementsByTagName("sender")[0]?.textContent || "LU-Alert";
-
-        // Datum formatieren
-        let dateStr = effective;
-        try {
-          dateStr = new Date(effective).toLocaleString("de-DE", {
-            day: '2-digit', month: '2-digit', year: 'numeric',
-            hour: '2-digit', minute: '2-digit'
-          });
-        } catch(e) {}
-
-        container.innerHTML = `
-          <article class="alert-card">
-            <div class="meta">
-              <span>Gültig ab: ${dateStr}</span>
-              <span>Quelle: ${sender}</span>
-            </div>
-            <div class="headline">${headline}</div>
-            <div class="description">${description}</div>
-          </article>
-        `;
-
+        rawXmlData = data.raw_xml;
+        renderAlerts(rawXmlData);
         statusBadge.textContent = "Stand: " + new Date().toLocaleTimeString("de-DE");
 
       } catch (err) {
@@ -185,7 +275,70 @@
       }
     }
 
-    // Erster Aufruf & Intervall für automatisches Neuladen (alle 2 Minuten)
+    function renderAlerts(xmlText) {
+      const container = document.getElementById('alerts-container');
+      const parser = new DOMParser();
+      const xmlDoc = parser.parseFromString(xmlText, "text/xml");
+      const infos = xmlDoc.getElementsByTagName("info");
+
+      if (infos.length === 0) {
+        container.innerHTML = "<div class='loading'>Aktuell liegen keine aktiven Warnungen vor.</div>";
+        return;
+      }
+
+      let targetInfo = null;
+      for (let info of infos) {
+        const lang = info.getElementsByTagName("language")[0]?.textContent || "";
+        if (lang.toLowerCase().startsWith(currentLang)) {
+          targetInfo = info;
+          break;
+        }
+      }
+      if (!targetInfo) targetInfo = infos[0];
+
+      // Warnstufe aus den Parametern extrahieren (z.B. ALERT_LVL_3 -> N3)
+      let levelCode = "N3"; // Fallback
+      const parameters = targetInfo.getElementsByTagName("parameter");
+      for (let param of parameters) {
+        const valName = param.getElementsByTagName("valueName")[0]?.textContent || "";
+        const val = param.getElementsByTagName("value")[0]?.textContent || "";
+        if (valName.includes("cb-eu-level")) {
+          if (val === "ALERT_LVL_1") levelCode = "N1";
+          else if (val === "ALERT_LVL_2") levelCode = "N2";
+          else if (val === "ALERT_LVL_3") levelCode = "N3";
+        }
+      }
+
+      const headline = targetInfo.getElementsByTagName("headline")[0]?.textContent || "Warnmeldung";
+      const description = targetInfo.getElementsByTagName("description")[0]?.textContent || "";
+      const effective = targetInfo.getElementsByTagName("effective")[0]?.textContent || "";
+      const sender = xmlDoc.getElementsByTagName("sender")[0]?.textContent || "LU-Alert";
+
+      let dateStr = effective;
+      try {
+        dateStr = new Date(effective).toLocaleString(currentLang === 'de' ? 'de-DE' : currentLang === 'fr' ? 'fr-FR' : 'en-US', {
+          day: '2-digit', month: '2-digit', year: 'numeric',
+          hour: '2-digit', minute: '2-digit'
+        });
+      } catch(e) {}
+
+      const labelFrom = currentLang === 'de' ? 'Gültig ab' : currentLang === 'fr' ? 'Valable à partir de' : 'Valid from';
+      const labelSource = currentLang === 'de' ? 'Quelle' : currentLang === 'fr' ? 'Source' : 'Source';
+
+      container.innerHTML = `
+        <article class="alert-card level-${levelCode}">
+          <div class="meta">
+            <span class="level-tag tag-${levelCode}">Stufe: ${levelCode}</span>
+            <span>${labelFrom}: ${dateStr}</span>
+            <span>${labelSource}: ${sender}</span>
+          </div>
+          <div class="headline">${headline}</div>
+          <div class="description">${description}</div>
+        </article>
+      `;
+    }
+
+    initTheme();
     loadAlerts();
     setInterval(loadAlerts, 120000);
   </script>
