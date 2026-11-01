@@ -69,11 +69,13 @@
     }
 
     .logo-btn:hover {
-      opacity: 0.8;
+      opacity: 0.85;
     }
 
     .logo-btn svg {
       transition: transform 0.4s ease;
+      height: 36px;
+      width: auto;
     }
 
     .logo-btn.refreshing svg {
@@ -108,15 +110,21 @@
       border-color: #38bdf8;
     }
 
+    /* Modernes Tag/Nacht SVG Icon Button */
     .theme-btn {
-      font-size: 1.1rem;
       padding: 5px 10px;
       display: flex;
       align-items: center;
       justify-content: center;
     }
 
-    /* Wetter Widget Styling mit modernerem Dropdown */
+    .theme-btn svg {
+      width: 18px;
+      height: 18px;
+      fill: currentColor;
+    }
+
+    /* Wetter Widget Styling */
     .weather-widget {
       background-color: var(--card-bg);
       border: 1px solid var(--border-color);
@@ -235,21 +243,23 @@
       margin: 2px 0;
     }
 
+    /* Legende harmonisiert */
     .legend-toggle-btn {
       background: var(--card-bg);
       color: var(--text-color);
       border: 1px solid var(--border-color);
-      padding: 8px 14px;
-      border-radius: 6px;
+      padding: 10px 14px;
+      border-radius: 8px;
       font-size: 0.85rem;
       font-weight: 600;
       cursor: pointer;
       width: 100%;
       text-align: left;
-      margin-bottom: 16px;
+      margin-bottom: 12px;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.03);
     }
 
     .legend-content {
@@ -260,6 +270,7 @@
       padding: 16px;
       margin-bottom: 20px;
       font-size: 0.85rem;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
     }
 
     .legend-content.open {
@@ -334,7 +345,16 @@
       align-items: center;
     }
 
-    .meta span, .meta a {
+    .meta span {
+      background: var(--badge-bg);
+      padding: 3px 8px;
+      border-radius: 4px;
+      border: 1px solid var(--border-color);
+      color: var(--text-muted);
+    }
+
+    /* Originales Design für Quell-Links */
+    .meta a {
       background: var(--badge-bg);
       padding: 3px 8px;
       border-radius: 4px;
@@ -344,8 +364,8 @@
     }
 
     .meta a:hover {
-      background: var(--border-color);
       color: var(--text-color);
+      background: var(--border-color);
     }
 
     .level-tag {
@@ -393,7 +413,6 @@
       text-decoration: none;
     }
 
-    /* Footer Link zur Originalseite */
     .alert-footer {
       margin-top: 16px;
       padding-top: 12px;
@@ -460,11 +479,11 @@
 
   <header>
     <div class="brand">
+      <!-- Offizielles LU-Alert Logo als direktes SVG (klickbar zum Neuladen) -->
       <button class="logo-btn" id="logo-refresh-btn" onclick="triggerManualRefresh()" title="Seite aktualisieren">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#eab308" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 2L2 22h20L12 2z"></path>
-          <line x1="12" y1="9" x2="12" y2="13"></line>
-          <line x1="12" y1="17" x2="12.01" y2="17"></line>
+        <svg viewBox="0 0 300 80" height="34" xmlns="http://www.w3.org/2000/svg">
+          <path d="M15 10 H65 V70 H15 Z" fill="#eab308"/>
+          <text x="75" y="55" font-family="Arial, sans-serif" font-weight="bold" font-size="38" fill="currentColor">LU-ALERT</text>
         </svg>
       </button>
       <h1>LU-Alert Monitor</h1>
@@ -473,11 +492,16 @@
       <button class="lang-btn active" onclick="setLanguage('de')">DE</button>
       <button class="lang-btn" onclick="setLanguage('fr')">FR</button>
       <button class="lang-btn" onclick="setLanguage('en')">EN</button>
-      <button class="theme-btn" id="theme-toggle" onclick="toggleTheme()" title="Tag/Nacht Modus">🌙</button>
+      <!-- Modernes SVG Tag/Nacht Icon wie beim Pegel -->
+      <button class="theme-btn" id="theme-toggle" onclick="toggleTheme()" title="Tag/Nacht Modus">
+        <svg id="theme-icon" viewBox="0 0 24 24">
+          <path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+        </svg>
+      </button>
     </div>
   </header>
 
-  <!-- Wetter Widget mit echtem, modernen Dropdown -->
+  <!-- Wetter Widget mit modernem Dropdown -->
   <div class="weather-widget" id="weather-widget">
     <div class="weather-main">
       <div class="weather-left">
@@ -700,20 +724,29 @@
     function initTheme() {
       const currentHour = new Date().getHours();
       const isNight = currentHour >= 22 || currentHour < 6;
+      const iconSvg = document.getElementById("theme-icon");
 
       if (isNight) {
         document.body.classList.add("dark-mode");
-        document.getElementById("theme-toggle").textContent = "☀️";
+        // Sonne-Icon für den Wechsel zum Tagmodus
+        iconSvg.innerHTML = '<path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>';
       } else {
         document.body.classList.remove("dark-mode");
-        document.getElementById("theme-toggle").textContent = "🌙";
+        // Mond-Icon für den Wechsel zum Nachtmodus
+        iconSvg.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
       }
     }
 
     function toggleTheme() {
       document.body.classList.toggle("dark-mode");
       const isDark = document.body.classList.contains("dark-mode");
-      document.getElementById("theme-toggle").textContent = isDark ? "☀️" : "🌙";
+      const iconSvg = document.getElementById("theme-icon");
+      
+      if (isDark) {
+        iconSvg.innerHTML = '<path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>';
+      } else {
+        iconSvg.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+      }
     }
 
     async function triggerManualRefresh() {
@@ -831,8 +864,10 @@
       }
     }
 
+    // Korrigierte Wetter-Auswahl per Dropdown
     function handleLocationChange() {
-      const name = document.getElementById("location-input").value;
+      const select = document.getElementById("location-select");
+      const name = select.value;
       if (COMMUNE_DATA[name]) {
         currentLat = COMMUNE_DATA[name].lat;
         currentLon = COMMUNE_DATA[name].lon;
@@ -1021,9 +1056,13 @@
       const effective = targetInfo.getElementsByTagName("effective")[0]?.textContent || "";
       const expires = targetInfo.getElementsByTagName("expires")[0]?.textContent || "";
       
-      // Quelle ermitteln und verlinken (Standard auf lu-alert.lu wenn nicht anders angegeben)
       const sender = xmlDoc.getElementsByTagName("sender")[0]?.textContent || "LU-Alert";
-      const sourceUrl = xmlDoc.getElementsByTagName("source")[0]?.textContent || "https://www.lu-alert.lu";
+      
+      // Korrekte dynamische Quellen-Erkennung (z.B. Alva bei Lebensmitteln, sonst LU-Alert)
+      let sourceUrl = "https://www.lu-alert.lu";
+      if (sender.toLowerCase().includes("alva") || isFoodRecall) {
+        sourceUrl = "https://alva.lu";
+      }
 
       let localeSetting = currentLang === 'de' ? 'de-DE' : currentLang === 'fr' ? 'fr-FR' : 'en-US';
       
