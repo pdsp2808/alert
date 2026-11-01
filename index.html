@@ -6,7 +6,6 @@
   <title>LU-Alert & Wetter Monitor</title>
   <style>
     :root {
-      /* Tagmodus Variablen */
       --bg-color: #f8fafc;
       --card-bg: #ffffff;
       --text-color: #0f172a;
@@ -17,7 +16,6 @@
     }
 
     body.dark-mode {
-      /* Nachtmodus Variablen */
       --bg-color: #0f172a;
       --card-bg: #1e293b;
       --text-color: #f8fafc;
@@ -60,7 +58,6 @@
       gap: 10px;
     }
 
-    /* Klickbares Logo mit Refresh-Animation */
     .logo-btn {
       background: none;
       border: none;
@@ -119,7 +116,7 @@
       justify-content: center;
     }
 
-    /* Wetter Widget Styling */
+    /* Wetter Widget Styling mit modernerem Dropdown */
     .weather-widget {
       background-color: var(--card-bg);
       border: 1px solid var(--border-color);
@@ -161,31 +158,15 @@
       flex-wrap: wrap;
     }
 
-    /* Dropdown-Feld mit Pfeilsymbol */
-    .weather-input-wrapper {
-      position: relative;
-      display: inline-flex;
-      align-items: center;
-    }
-
-    .weather-input {
+    .weather-select {
       background: var(--card-bg);
       color: var(--text-color);
       border: 1px solid var(--border-color);
       border-radius: 6px;
-      padding: 4px 24px 4px 8px;
+      padding: 4px 10px;
       font-size: 0.85rem;
       font-weight: 600;
-      width: 140px;
       cursor: pointer;
-    }
-
-    .weather-dropdown-arrow {
-      position: absolute;
-      right: 8px;
-      pointer-events: none;
-      font-size: 0.65rem;
-      color: var(--text-muted);
     }
 
     .weather-right {
@@ -353,11 +334,18 @@
       align-items: center;
     }
 
-    .meta span {
+    .meta span, .meta a {
       background: var(--badge-bg);
       padding: 3px 8px;
       border-radius: 4px;
       border: 1px solid var(--border-color);
+      color: var(--text-muted);
+      text-decoration: none;
+    }
+
+    .meta a:hover {
+      background: var(--border-color);
+      color: var(--text-color);
     }
 
     .level-tag {
@@ -403,6 +391,24 @@
     .description a {
       color: #38bdf8;
       text-decoration: none;
+    }
+
+    /* Footer Link zur Originalseite */
+    .alert-footer {
+      margin-top: 16px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border-color);
+      font-size: 0.85rem;
+    }
+
+    .alert-footer a {
+      color: #38bdf8;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .alert-footer a:hover {
+      text-decoration: underline;
     }
 
     .collapsible-section {
@@ -454,7 +460,6 @@
 
   <header>
     <div class="brand">
-      <!-- Klickbares Logo mit manueller Neulade-Funktion -->
       <button class="logo-btn" id="logo-refresh-btn" onclick="triggerManualRefresh()" title="Seite aktualisieren">
         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#eab308" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M12 2L2 22h20L12 2z"></path>
@@ -472,7 +477,7 @@
     </div>
   </header>
 
-  <!-- Wetter Widget mit Dropdown-Symbol -->
+  <!-- Wetter Widget mit echtem, modernen Dropdown -->
   <div class="weather-widget" id="weather-widget">
     <div class="weather-main">
       <div class="weather-left">
@@ -480,11 +485,9 @@
         <div>
           <div class="weather-temp" id="w-temp">-- °C</div>
           <div class="weather-desc">
-            <div class="weather-input-wrapper">
-              <input type="text" id="location-input" class="weather-input" value="Reisdorf" list="communes-list" oninput="handleLocationInput(event)" onchange="handleLocationChange()" placeholder="Gemeinde..." onclick="this.select()">
-              <span class="weather-dropdown-arrow">▼</span>
-            </div>
-            <datalist id="communes-list"></datalist>: <span id="w-status">Lade...</span>
+            <select id="location-select" class="weather-select" onchange="handleLocationChange()">
+              <option value="49.85,6.27" selected>Reisdorf</option>
+            </select>: <span id="w-status">Lade...</span>
           </div>
         </div>
       </div>
@@ -677,22 +680,23 @@
       "Tandel": { lat: 49.89, lon: 6.20 }
     };
 
-    let currentLat = 49.85; // Reisdorf Standard
+    let currentLat = 49.85;
     let currentLon = 6.27;
     let activeForecastMode = null;
     let cachedWeatherData = null;
 
-    function initCommuneList() {
-      const datalist = document.getElementById("communes-list");
-      datalist.innerHTML = "";
+    function initCommuneSelect() {
+      const select = document.getElementById("location-select");
+      select.innerHTML = "";
       Object.keys(COMMUNE_DATA).sort().forEach(commune => {
         const option = document.createElement("option");
         option.value = commune;
-        datalist.appendChild(option);
+        option.textContent = commune;
+        if (commune === "Reisdorf") option.selected = true;
+        select.appendChild(option);
       });
     }
 
-    // Identisch zur Pegel-Logik: Tag/Nachtmodus
     function initTheme() {
       const currentHour = new Date().getHours();
       const isNight = currentHour >= 22 || currentHour < 6;
@@ -712,7 +716,6 @@
       document.getElementById("theme-toggle").textContent = isDark ? "☀️" : "🌙";
     }
 
-    // Manuelles Aktualisieren über Logo-Klick
     async function triggerManualRefresh() {
       const btn = document.getElementById("logo-refresh-btn");
       btn.classList.add("refreshing");
@@ -828,31 +831,12 @@
       }
     }
 
-    function handleLocationInput(event) {
-      const name = event.target.value.trim();
+    function handleLocationChange() {
+      const name = document.getElementById("location-input").value;
       if (COMMUNE_DATA[name]) {
         currentLat = COMMUNE_DATA[name].lat;
         currentLon = COMMUNE_DATA[name].lon;
         loadWeather(currentLat, currentLon);
-      }
-    }
-
-    async function handleLocationChange() {
-      const name = document.getElementById("location-input").value.trim();
-      if (COMMUNE_DATA[name]) {
-        currentLat = COMMUNE_DATA[name].lat;
-        currentLon = COMMUNE_DATA[name].lon;
-        loadWeather(currentLat, currentLon);
-      } else if (name.length > 2) {
-        try {
-          const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(name)}&count=1&language=de`);
-          const data = await res.json();
-          if (data.results && data.results.length > 0) {
-            currentLat = data.results[0].latitude;
-            currentLon = data.results[0].longitude;
-            loadWeather(currentLat, currentLon);
-          }
-        } catch (e) {}
       }
     }
 
@@ -1036,7 +1020,10 @@
       const description = targetInfo.getElementsByTagName("description")[0]?.textContent || "";
       const effective = targetInfo.getElementsByTagName("effective")[0]?.textContent || "";
       const expires = targetInfo.getElementsByTagName("expires")[0]?.textContent || "";
+      
+      // Quelle ermitteln und verlinken (Standard auf lu-alert.lu wenn nicht anders angegeben)
       const sender = xmlDoc.getElementsByTagName("sender")[0]?.textContent || "LU-Alert";
+      const sourceUrl = xmlDoc.getElementsByTagName("source")[0]?.textContent || "https://www.lu-alert.lu";
 
       let localeSetting = currentLang === 'de' ? 'de-DE' : currentLang === 'fr' ? 'fr-FR' : 'en-US';
       
@@ -1060,6 +1047,7 @@
       const labelUntil = currentLang === 'de' ? 'bis' : currentLang === 'fr' ? 'au' : 'until';
       const labelSource = currentLang === 'de' ? 'Quelle' : currentLang === 'fr' ? 'Source' : 'Source';
       const levelLabel = currentLang === 'de' ? 'Stufe' : currentLang === 'fr' ? 'Niveau' : 'Level';
+      const detailsLinkText = currentLang === 'de' ? '🔗 Auf lu-alert.lu ansehen' : currentLang === 'fr' ? '🔗 Voir sur lu-alert.lu' : '🔗 View on lu-alert.lu';
       const foodTitle = currentLang === 'de' ? '🍎 Lebensmittel- & Produktrückrufe (1)' : currentLang === 'fr' ? '🍎 Rappels d\'aliments et produits (1)' : '🍎 Food & Product Recalls (1)';
       const noEmergencyText = currentLang === 'de' ? 'Keine akuten Notfall- oder Unwetterwarnungen.' : currentLang === 'fr' ? 'Aucune alerte d\'urgence ou météo active.' : 'No active emergency or weather alerts.';
 
@@ -1068,10 +1056,13 @@
           <div class="meta">
             <span class="level-tag tag-${levelCodeRaw}">${levelLabel}: ${displayLevel}</span>
             <span>${labelValid}: ${effectiveStr} — ${labelUntil} ${expiresStr}</span>
-            <span>${labelSource}: ${sender}</span>
+            <span>${labelSource}: <a href="${sourceUrl}" target="_blank" rel="noopener">${sender} ↗</a></span>
           </div>
           <div class="headline">${headline}</div>
           <div class="description">${description}</div>
+          <div class="alert-footer">
+            <a href="https://www.lu-alert.lu" target="_blank" rel="noopener">${detailsLinkText}</a>
+          </div>
         </article>
       `;
 
@@ -1086,14 +1077,14 @@
       }
     }
 
-    // Initialisierung beim Laden
-    initCommuneList();
+    // Initialisierung
+    initCommuneSelect();
     initTheme();
     updateLegendTexts();
     loadWeather(currentLat, currentLon);
     loadAlerts();
     
-    // Automatisches Aktualisieren alle 2 Minuten (120.000 ms)
+    // Automatisches Aktualisieren alle 2 Minuten
     setInterval(() => {
       loadAlerts();
       loadWeather(currentLat, currentLon);
