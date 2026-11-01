@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LU-Alert Monitor</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: #0f172a;
+      color: #f8fafc;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid #334155;
+      padding-bottom: 12px;
+      margin-bottom: 24px;
+    }
+    h1 {
+      font-size: 1.4rem;
+      font-weight: 600;
+    }
+    .status-badge {
+      font-size: 0.75rem;
+      background-color: #1e293b;
+      border: 1px solid #334155;
+      color: #94a3b8;
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+    .alert-card {
+      background-color: #1e293b;
+      border-left: 6px solid #eab308;
+      border-radius: 6px;
+      padding: 20px;
+      margin-bottom: 16px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+    }
+    .meta {
+      font-size: 0.85rem;
+      color: #94a3b8;
+      margin-bottom: 10px;
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .meta span {
+      background: #0f172a;
+      padding: 2px 6px;
+      border-radius: 3px;
+    }
+    .headline {
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+      color: #f1f5f9;
+    }
+    .description {
+      font-size: 0.95rem;
+      line-height: 1.6;
+      color: #cbd5e1;
+    }
+    .description img {
+      max-width: 200px;
+      height: auto;
+      border-radius: 6px;
+      margin: 12px 0;
+      display: block;
+    }
+    .description ul {
+      margin-left: 20px;
+      margin-top: 8px;
+      margin-bottom: 8px;
+    }
+    .description a {
+      color: #38bdf8;
+      text-decoration: none;
+    }
+    .description a:hover {
+      text-decoration: underline;
+    }
+    .loading, .error {
+      text-align: center;
+      padding: 40px;
+      background: #1e293b;
+      border-radius: 6px;
+      color: #94a3b8;
+    }
+    .error {
+      color: #f87171;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>LU-Alert Monitor</h1>
+    <div id="status" class="status-badge">Aktualisiere...</div>
+  </header>
+
+  <main id="alerts-container">
+    <div class="loading">Lade aktuelle Meldungen von LU-Alert...</div>
+  </main>
+
+  <script>
+    const WORKER_URL = "https://lu-alert-proxy.patrick95tuga.workers.dev/";
+
+    async function loadAlerts() {
+      const container = document.getElementById('alerts-container');
+      const statusBadge = document.getElementById('status');
+
+      try {
+        const response = await fetch(WORKER_URL);
+        if (!response.ok) throw new Error(`HTTP Error ${response.status}`);
+        
+        const data = await response.json();
+
+        if (data.error) {
+          throw new Error(data.error);
+        }
+
+        // XML aus der Worker-Antwort parsen
+        const parser = new DOMParser();
+        const xmlDoc = parser.parseFromString(data.raw_xml, "text/xml");
+        const infos = xmlDoc.getElementsByTagName("info");
+
+        if (infos.length === 0) {
+          container.innerHTML = "<div class='loading'>Aktuell liegen keine aktiven Warnungen vor.</div>";
+          statusBadge.textContent = "Stand: " + new Date().toLocaleTimeString("de-DE");
+          return;
+        }
+
+        // Deutschsprachigen Block suchen, sonst ersten verfügbaren
+        let targetInfo = null;
+        for (let info of infos) {
+          const lang = info.getElementsByTagName("language")[0]?.textContent;
+          if (lang === "de" || lang === "de-DE") {
+            targetInfo = info;
+            break;
+          }
+        }
+        if (!targetInfo) targetInfo = infos[0];
+
+        // Daten extrahieren
+        const headline = targetInfo.getElementsByTagName("headline")[0]?.textContent || "Warnmeldung";
+        const description = targetInfo.getElementsByTagName("description")[0]?.textContent || "";
+        const effective = targetInfo.getElementsByTagName("effective")[0]?.textContent || "";
+        const sender = xmlDoc.getElementsByTagName("sender")[0]?.textContent || "LU-Alert";
+
+        // Datum formatieren
+        let dateStr = effective;
+        try {
+          dateStr = new Date(effective).toLocaleString("de-DE", {
+            day: '2-digit', month: '2-digit', year: 'numeric',
+            hour: '2-digit', minute: '2-digit'
+          });
+        } catch(e) {}
+
+        container.innerHTML = `
+          <article class="alert-card">
+            <div class="meta">
+              <span>Gültig ab: ${dateStr}</span>
+              <span>Quelle: ${sender}</span>
+            </div>
+            <div class="headline">${headline}</div>
+            <div class="description">${description}</div>
+          </article>
+        `;
+
+        statusBadge.textContent = "Stand: " + new Date().toLocaleTimeString("de-DE");
+
+      } catch (err) {
+        container.innerHTML = `<div class="error">Fehler beim Laden der Daten: ${err.message}</div>`;
+        statusBadge.textContent = "Fehler";
+      }
+    }
+
+    // Erster Aufruf & Intervall für automatisches Neuladen (alle 2 Minuten)
+    loadAlerts();
+    setInterval(loadAlerts, 120000);
+  </script>
+</body>
+</html>
