@@ -85,7 +85,7 @@
       padding: 5px 10px;
     }
 
-    /* Wetter Widget Styling */
+    /* Wetter Widget Styling mit Freitext-Suche */
     .weather-widget {
       background-color: var(--card-bg);
       border: 1px solid var(--border-color);
@@ -121,17 +121,18 @@
       display: flex;
       align-items: center;
       gap: 6px;
+      flex-wrap: wrap;
     }
 
-    .weather-select {
+    .weather-input {
       background: var(--card-bg);
       color: var(--text-color);
       border: 1px solid var(--border-color);
       border-radius: 4px;
-      padding: 2px 6px;
+      padding: 3px 8px;
       font-size: 0.85rem;
       font-weight: 600;
-      cursor: pointer;
+      width: 130px;
     }
 
     .weather-right {
@@ -349,23 +350,14 @@
     </div>
   </header>
 
-  <!-- Wetter Widget mit Ortsauswahl -->
+  <!-- Wetter Widget mit Freitext-Ortssuche -->
   <div class="weather-widget" id="weather-widget">
     <div class="weather-left">
       <span class="weather-icon" id="w-icon">⏳</span>
       <div>
         <div class="weather-temp" id="w-temp">-- °C</div>
         <div class="weather-desc">
-          <select id="location-select" class="weather-select" onchange="loadWeather()">
-            <option value="49.85,6.27" selected>Reisdorf</option>
-            <option value="49.86,6.15">Diekirch</option>
-            <option value="49.84,6.09">Ettelbruck</option>
-            <option value="49.80,6.34">Echternach</option>
-            <option value="49.96,5.93">Wiltz</option>
-            <option value="49.71,6.33">Grevenmacher</option>
-            <option value="49.61,6.13">Luxembourg-Ville</option>
-            <option value="49.50,5.98">Esch-sur-Alzette</option>
-          </select>: <span id="w-status">Lade...</span>
+          <input type="text" id="location-input" class="weather-input" value="Reisdorf" onchange="searchLocation()" placeholder="Ort eingeben...">: <span id="w-status">Lade...</span>
         </div>
       </div>
     </div>
@@ -458,6 +450,8 @@
     const WORKER_URL = "https://lu-alert-proxy.patrick95tuga.workers.dev/";
     let currentLang = "de";
     let rawXmlData = null;
+    let currentLat = 49.85; // Standard Reisdorf
+    let currentLon = 6.27;
 
     function initTheme() {
       const currentHour = new Date().getHours();
@@ -511,7 +505,7 @@
         }
       });
       updateLegendTexts();
-      loadWeather();
+      loadWeather(currentLat, currentLon);
       if (rawXmlData) {
         renderAlerts(rawXmlData);
       }
@@ -581,12 +575,29 @@
       }
     }
 
-    // --- Wetter laden mit gewählter Ortschaft ---
-    async function loadWeather() {
-      const coords = document.getElementById("location-select").value.split(",");
-      const lat = coords[0];
-      const lon = coords[1];
+    // --- Ort per Freitext suchen (Geocoding API) ---
+    async function searchLocation() {
+      const query = document.getElementById("location-input").value;
+      if (!query) return;
 
+      try {
+        const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=1&language=de`);
+        const geoData = await geoRes.json();
+
+        if (geoData.results && geoData.results.length > 0) {
+          currentLat = geoData.results[0].latitude;
+          currentLon = geoData.results[0].longitude;
+          loadWeather(currentLat, currentLon);
+        } else {
+          document.getElementById("w-status").textContent = "Ort nicht gefunden";
+        }
+      } catch (e) {
+        document.getElementById("w-status").textContent = "Fehler bei Suche";
+      }
+    }
+
+    // --- Wetter für Koordinaten laden ---
+    async function loadWeather(lat, lon) {
       try {
         const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m`);
         const data = await res.json();
@@ -751,11 +762,11 @@
 
     initTheme();
     updateLegendTexts();
-    loadWeather();
+    loadWeather(currentLat, currentLon);
     loadAlerts();
     setInterval(() => {
       loadAlerts();
-      loadWeather();
+      loadWeather(currentLat, currentLon);
     }, 120000);
   </script>
 </body>
