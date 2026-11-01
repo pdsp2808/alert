@@ -56,36 +56,118 @@
     .brand {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
     }
 
-    .logo-btn {
-      background: none;
-      border: none;
-      cursor: pointer;
-      padding: 2px;
+    /* Kasten für das Warnsymbol exakt wie bei der Pegel-Seite */
+    .icon-box {
+      background: #3b82f6;
+      border-radius: 8px;
+      width: 42px;
+      height: 42px;
       display: flex;
       align-items: center;
-      border-radius: 6px;
+      justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
 
-    .logo-btn:hover {
-      opacity: 0.8;
+    .icon-box svg {
+      width: 24px;
+      height: 24px;
+      stroke: #ffffff;
     }
 
-    .logo-btn svg {
-      transition: transform 0.4s ease;
-      width: 28px;
-      height: 28px;
-    }
-
-    .logo-btn.refreshing svg {
-      transform: rotate(360deg);
+    .title-area {
+      display: flex;
+      flex-direction: column;
     }
 
     h1 {
-      font-size: 1.3rem;
+      font-size: 1.25rem;
       font-weight: 700;
+      color: var(--text-color);
+      line-height: 1.2;
+    }
+
+    .subtitle {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 3px;
+    }
+
+    .subtitle a {
+      color: var(--text-muted);
+      text-decoration: none;
+    }
+
+    .subtitle a:hover {
+      text-decoration: underline;
+    }
+
+    /* Auf kleineren Bildschirmen Quelle in neue Zeile */
+    @media (max-width: 550px) {
+      .source-break {
+        display: block;
+        margin-top: 1px;
+      }
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .stand-box {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .stand-box span:last-child {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--text-color);
+    }
+
+    .refresh-btn, .theme-btn {
+      background-color: var(--card-bg);
+      color: var(--text-color);
+      border: 1px solid var(--border-color);
+      padding: 8px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+    }
+
+    .refresh-btn:hover, .theme-btn:hover {
+      border-color: var(--accent-color);
+    }
+
+    .refresh-btn svg {
+      width: 18px;
+      height: 18px;
+      fill: currentColor;
+      transition: transform 0.4s ease;
+    }
+
+    .refresh-btn.refreshing svg {
+      transform: rotate(360deg);
+    }
+
+    .theme-btn svg {
+      width: 18px;
+      height: 18px;
+      fill: currentColor;
     }
 
     .controls {
@@ -94,32 +176,19 @@
       gap: 8px;
     }
 
-    .lang-select, .theme-btn {
+    .lang-select {
       background-color: var(--card-bg);
       color: var(--text-color);
       border: 1px solid var(--border-color);
-      padding: 6px 10px;
-      border-radius: 6px;
+      padding: 7px 10px;
+      border-radius: 8px;
       cursor: pointer;
       font-size: 0.85rem;
       font-weight: 600;
     }
 
-    .lang-select:hover, .theme-btn:hover {
+    .lang-select:hover {
       border-color: var(--accent-color);
-    }
-
-    .theme-btn {
-      padding: 5px 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .theme-btn svg {
-      width: 18px;
-      height: 18px;
-      fill: currentColor;
     }
 
     /* Modernes Wetter-Widget */
@@ -137,6 +206,8 @@
       justify-content: space-between;
       align-items: flex-start;
       margin-bottom: 14px;
+      flex-wrap: wrap;
+      gap: 16px;
     }
 
     .weather-main {
@@ -219,13 +290,6 @@
     .weather-right strong {
       color: var(--text-color);
       font-size: 0.95rem;
-    }
-
-    /* Status rechts im Wetter Widget wie bei Pegel */
-    .widget-status {
-      font-size: 0.75rem;
-      color: var(--text-muted);
-      text-align: right;
     }
 
     .forecast-controls {
@@ -507,30 +571,45 @@
 
   <header>
     <div class="brand">
-      <button class="logo-btn" id="logo-refresh-btn" onclick="triggerManualRefresh()" title="Seite aktualisieren">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#eab308" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 2L2 22h20L12 2z"></path>
+      <div class="icon-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
           <line x1="12" y1="9" x2="12" y2="13"></line>
           <line x1="12" y1="17" x2="12.01" y2="17"></line>
         </svg>
-      </button>
-      <h1>LU-Alert Monitor</h1>
+      </div>
+      <div class="title-area">
+        <h1>LU-Alert Monitor</h1>
+        <div class="subtitle">
+          <a href="https://www.cisreisdorf.lu" target="_blank" rel="noopener">CIS Reisdorf</a> 
+          <span class="source-break">• Quelle: <a href="https://www.lu-alert.lu" target="_blank" rel="noopener">lu-alert.lu</a></span>
+        </div>
+      </div>
     </div>
-    <div class="controls">
-      <select id="lang-select" class="lang-select" onchange="setLanguage(this.value)">
-        <option value="de" selected>DE</option>
-        <option value="fr">FR</option>
-        <option value="en">EN</option>
-      </select>
-      <button class="theme-btn" id="theme-toggle" onclick="toggleTheme()" title="Tag/Nacht Modus">
-        <svg id="theme-icon" viewBox="0 0 24 24">
-          <path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
-        </svg>
+    <div class="header-right">
+      <div class="stand-box">
+        <span>Stand</span>
+        <span id="status">--:--</span>
+      </div>
+      <button class="refresh-btn" id="logo-refresh-btn" onclick="triggerManualRefresh()" title="Seite aktualisieren">
+        <svg viewBox="0 0 24 24"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
       </button>
+      <div class="controls">
+        <select id="lang-select" class="lang-select" onchange="setLanguage(this.value)">
+          <option value="de" selected>DE</option>
+          <option value="fr">FR</option>
+          <option value="en">EN</option>
+        </select>
+        <button class="theme-btn" id="theme-toggle" onclick="toggleTheme()" title="Tag/Nacht Modus">
+          <svg id="theme-icon" viewBox="0 0 24 24">
+            <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+          </svg>
+        </button>
+      </div>
     </div>
   </header>
 
-  <!-- Modernes Wetter Widget mit Status oben rechts -->
+  <!-- Modernes Wetter Widget -->
   <div class="weather-widget" id="weather-widget">
     <div class="weather-top-row">
       <div class="weather-main">
@@ -549,18 +628,15 @@
           </div>
         </div>
       </div>
-      <div style="display: flex; gap: 16px; align-items: flex-start;">
-        <div class="weather-right">
-          <div>
-            <span id="w-wind-label" style="font-size:0.75rem;">Wind</span>
-            <strong id="w-wind">-- km/h</strong>
-          </div>
-          <div>
-            <span id="w-hum-label" style="font-size:0.75rem;">Feuchtigkeit</span>
-            <strong id="w-hum">--%</strong>
-          </div>
+      <div class="weather-right">
+        <div>
+          <span id="w-wind-label" style="font-size:0.75rem;">Wind</span>
+          <strong id="w-wind">-- km/h</strong>
         </div>
-        <div id="status" class="widget-status">Aktualisiere...</div>
+        <div>
+          <span id="w-hum-label" style="font-size:0.75rem;">Feuchtigkeit</span>
+          <strong id="w-hum">--%</strong>
+        </div>
       </div>
     </div>
 
@@ -771,11 +847,9 @@
 
       if (isNight) {
         document.body.classList.add("dark-mode");
-        // Korrigierter, vollständiger Sonnen-Pfad für den Wechsel zum Tagmodus
-        iconSvg.innerHTML = '<circle cx="12" cy="12" r="4"></circle><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M6.34 17.66l-1.41 1.41m12.02-12.02l-1.41 1.41"></path>';
+        iconSvg.innerHTML = '<circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>';
       } else {
         document.body.classList.remove("dark-mode");
-        // Mond-Icon für den Wechsel zum Nachtmodus
         iconSvg.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
       }
     }
@@ -786,7 +860,7 @@
       const iconSvg = document.getElementById("theme-icon");
       
       if (isDark) {
-        iconSvg.innerHTML = '<circle cx="12" cy="12" r="4"></circle><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M6.34 17.66l-1.41 1.41m12.02-12.02l-1.41 1.41"></path>';
+        iconSvg.innerHTML = '<circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>';
       } else {
         iconSvg.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
       }
@@ -1028,11 +1102,15 @@
 
         rawXmlData = data.raw_xml;
         renderAlerts(rawXmlData);
-        statusBadge.textContent = "Stand: " + new Date().toLocaleTimeString("de-DE");
+        
+        // Exakt hh:mm Format wie auf der Pegel-Seite
+        const now = new Date();
+        const timeStr = now.toLocaleTimeString("de-DE", { hour: '2-digit', minute: '2-digit' });
+        statusBadge.textContent = timeStr;
 
       } catch (err) {
         primaryContainer.innerHTML = `<div class="error">Fehler beim Laden der Daten: ${err.message}</div>`;
-        statusBadge.textContent = "Fehler";
+        statusBadge.textContent = "ERR";
       }
     }
 
