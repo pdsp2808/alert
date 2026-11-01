@@ -413,7 +413,7 @@
     </div>
   </header>
 
-  <!-- Wetter Widget mit Autocomplete-Liste & Vorhersage -->
+  <!-- Wetter Widget mit verbesserter Dropdown-Gemeindesuche -->
   <div class="weather-widget" id="weather-widget">
     <div class="weather-main">
       <div class="weather-left">
@@ -421,14 +421,14 @@
         <div>
           <div class="weather-temp" id="w-temp">-- °C</div>
           <div class="weather-desc">
-            <input type="text" id="location-input" class="weather-input" value="Reisdorf" list="communes-list" onchange="handleLocationChange()" placeholder="Gemeinde suchen...">
+            <input type="text" id="location-input" class="weather-input" value="Reisdorf" list="communes-list" oninput="handleLocationInput(event)" onchange="handleLocationChange()" placeholder="Gemeinde wählen...">
             <datalist id="communes-list"></datalist>: <span id="w-status">Lade...</span>
           </div>
         </div>
       </div>
       <div class="weather-right">
         <div><span id="w-wind-label">Wind</span>: <strong id="w-wind">-- km/h</strong></div>
-        <div><span id="w-hum-label">Feuchte</span>: <strong id="w-hum">--%</strong></div>
+        <div><span id="w-hum-label">Feuchtigkeit</span>: <strong id="w-hum">--%</strong></div>
       </div>
     </div>
 
@@ -527,32 +527,114 @@
     let currentLang = "de";
     let rawXmlData = null;
 
-    // Gemeinden Luxemburgs mit Koordinaten
+    // Vollständige Liste der Luxemburger Gemeinden mit Koordinaten
     const COMMUNE_DATA = {
       "Reisdorf": { lat: 49.85, lon: 6.27 },
+      "Beaufort": { lat: 49.83, lon: 6.29 },
       "Bettendorf": { lat: 49.87, lon: 6.21 },
+      "Bourscheid": { lat: 49.91, lon: 6.06 },
       "Diekirch": { lat: 49.86, lon: 6.15 },
-      "Echternach": { lat: 49.80, lon: 6.34 },
-      "Esch-sur-Alzette": { lat: 49.50, lon: 5.98 },
+      "Erpeldange-sur-Sûre": { lat: 49.87, lon: 6.11 },
       "Ettelbruck": { lat: 49.84, lon: 6.09 },
-      "Grevenmacher": { lat: 49.71, lon: 6.33 },
+      "Fメルange": { lat: 49.86, lon: 6.24 }, // Fentange / Feulen
+      "Feulen": { lat: 49.87, lon: 6.01 },
+      "Mertzig": { lat: 49.84, lon: 6.02 },
+      "Schieren": { lat: 49.82, lon: 6.11 },
+      "Wettringen": { lat: 49.85, lon: 6.20 },
+      "Echternach": { lat: 49.80, lon: 6.34 },
+      "Berdorf": { lat: 49.81, lon: 6.34 },
+      "Consdorf": { lat: 49.78, lon: 6.32 },
+      "Rosport-Mompach": { lat: 49.80, lon: 6.49 },
+      "Waldbillig": { lat: 49.78, lon: 6.27 },
       "Luxembourg": { lat: 49.61, lon: 6.13 },
-      "Mersch": { lat: 49.74, lon: 6.10 },
-      "Redange": { lat: 49.76, lon: 5.89 },
+      "Bertrange": { lat: 49.60, lon: 6.06 },
+      "Contern": { lat: 49.57, lon: 6.21 },
+      "Hesperange": { lat: 49.57, lon: 6.15 },
+      "Niederanven": { lat: 49.65, lon: 6.26 },
+      "Sandweiler": { lat: 49.59, lon: 6.21 },
+      "Schifflange": { lat: 49.50, lon: 6.01 },
+      "Schuttrange": { lat: 49.61, lon: 6.25 },
+      "Steinsel": { lat: 49.67, lon: 6.13 },
+      "Strassen": { lat: 49.62, lon: 6.07 },
+      "Walferdange": { lat: 49.65, lon: 6.13 },
+      "Weiler-la-Tour": { lat: 49.54, lon: 6.20 },
+      "Esch-sur-Alzette": { lat: 49.50, lon: 5.98 },
+      "Differdange": { lat: 49.52, lon: 5.89 },
+      "Dudelange": { lat: 49.48, lon: 6.08 },
+      "Kayl": { lat: 49.48, lon: 6.03 },
+      "Mondercange": { lat: 49.53, lon: 6.04 },
+      "Pétange": { lat: 49.55, lon: 5.88 },
+      "Reckange-sur-Mess": { lat: 49.55, lon: 6.05 },
+      "Roeser": { lat: 49.53, lon: 6.14 },
+      "Rumelange": { lat: 49.55, lon: 6.03 },
+      "Sanem": { lat: 49.55, lon: 5.91 },
+      "Wiltz": { lat: 49.96, lon: 5.93 },
+      "Boulaide": { lat: 49.89, lon: 5.84 },
+      "Esch-sur-Sûre": { lat: 49.91, lon: 5.93 },
+      "Lac de la Haute-Sûre": { lat: 49.90, lon: 5.88 },
+      "Goesdorf": { lat: 49.93, lon: 5.99 },
+      "Kiischpelt": { lat: 50.00, lon: 6.01 },
+      "Clervaux": { lat: 50.05, lon: 6.02 },
+      "Parc Hosingen": { lat: 50.03, lon: 6.12 },
+      "Troisvierges": { lat: 50.12, lon: 5.98 },
+      "Weiswampach": { lat: 50.13, lon: 6.07 },
+      "Wincrange": { lat: 50.06, lon: 5.91 },
+      "Grevenmacher": { lat: 49.71, lon: 6.33 },
+      "Betzdorf": { lat: 49.68, lon: 6.33 },
+      "Biwer": { lat: 49.68, lon: 6.38 },
+      "Flaxweiler": { lat: 49.66, lon: 6.33 },
+      "Junglinster": { lat: 49.70, lon: 6.25 },
+      "Manternach": { lat: 49.70, lon: 6.42 },
+      "Mertert": { lat: 49.70, lon: 6.47 },
+      "Wormeldange": { lat: 49.63, lon: 6.40 },
       "Remich": { lat: 49.54, lon: 6.36 },
+      "Bous": { lat: 49.56, lon: 6.34 },
+      "Dalheim": { lat: 49.53, lon: 6.27 },
+      "Lenningen": { lat: 49.61, lon: 6.35 },
+      "Mondorf-les-Bains": { lat: 49.50, lon: 6.28 },
+      "Plein": { lat: 49.56, lon: 6.31 },
+      "Stadtbredimus": { lat: 49.57, lon: 6.36 },
+      "Mersch": { lat: 49.74, lon: 6.10 },
+      "Bissen": { lat: 49.77, lon: 6.08 },
+      "Colmar-Berg": { lat: 49.81, lon: 6.09 },
+      "Fischbach": { lat: 49.75, lon: 6.21 },
+      "Heffingen": { lat: 49.78, lon: 6.25 },
+      "Larochette": { lat: 49.78, lon: 6.22 },
+      "Lintgen": { lat: 49.73, lon: 6.13 },
+      "Lorentzweiler": { lat: 49.69, lon: 6.13 },
+      "Nommern": { lat: 49.79, lon: 6.20 },
+      "Tuntange": { lat: 49.73, lon: 6.00 },
+      "Redange": { lat: 49.76, lon: 5.89 },
+      "Beckerich": { lat: 49.73, lon: 5.89 },
+      "Preizerdaul": { lat: 49.78, lon: 5.91 },
+      "Rameldange": { lat: 49.73, lon: 5.95 },
+      "Saeul": { lat: 49.73, lon: 6.03 },
+      "Useldange": { lat: 49.75, lon: 5.93 },
+      "Vichten": { lat: 49.79, lon: 5.94 },
+      "Wahl": { lat: 49.82, lon: 5.91 },
+      "Capellen": { lat: 49.64, lon: 5.96 },
+      "Garnich": { lat: 49.61, lon: 5.96 },
+      "Hobscheid": { lat: 49.68, lon: 5.91 },
+      "Käerjeng": { lat: 49.56, lon: 5.91 },
+      "Koerich": { lat: 49.65, lon: 5.94 },
+      "Kopstal": { lat: 49.67, lon: 6.08 },
+      "Mamer": { lat: 49.63, lon: 6.02 },
+      "Septfontaines": { lat: 49.68, lon: 5.95 },
+      "Steinfort": { lat: 49.65, lon: 5.91 },
       "Vianden": { lat: 49.93, lon: 6.20 },
-      "Wiltz": { lat: 49.96, lon: 5.93 }
+      "Putscheid": { lat: 49.96, lon: 6.18 },
+      "Tandel": { lat: 49.89, lon: 6.20 }
     };
 
-    let currentLat = 49.85;
+    let currentLat = 49.85; // Reisdorf Standard
     let currentLon = 6.27;
-    let activeForecastMode = null; // 'hourly', 'daily' oder null
+    let activeForecastMode = null;
     let cachedWeatherData = null;
 
     function initCommuneList() {
       const datalist = document.getElementById("communes-list");
       datalist.innerHTML = "";
-      Object.keys(COMMUNE_DATA).forEach(commune => {
+      Object.keys(COMMUNE_DATA).sort().forEach(commune => {
         const option = document.createElement("option");
         option.value = commune;
         datalist.appendChild(option);
@@ -627,6 +709,7 @@
       document.getElementById("badge-n3").textContent = prefix + '3';
 
       document.getElementById("th-desc").textContent = currentLang === 'de' ? 'Beschreibung' : currentLang === 'fr' ? 'Description' : 'Description';
+      document.getElementById("w-hum-label").textContent = currentLang === 'de' ? 'Feuchtigkeit' : currentLang === 'fr' ? 'Humidité' : 'Humidity';
 
       if (currentLang === 'de') {
         btnText.textContent = isOpen ? "ℹ️ Warnstufen-Legende ausblenden" : "ℹ️ Warnstufen-Legende anzeigen";
@@ -681,7 +764,15 @@
       }
     }
 
-    // Ort-Änderung verarbeiten
+    function handleLocationInput(event) {
+      const name = event.target.value.trim();
+      if (COMMUNE_DATA[name]) {
+        currentLat = COMMUNE_DATA[name].lat;
+        currentLon = COMMUNE_DATA[name].lon;
+        loadWeather(currentLat, currentLon);
+      }
+    }
+
     async function handleLocationChange() {
       const name = document.getElementById("location-input").value.trim();
       if (COMMUNE_DATA[name]) {
@@ -689,7 +780,6 @@
         currentLon = COMMUNE_DATA[name].lon;
         loadWeather(currentLat, currentLon);
       } else if (name.length > 2) {
-        // Geocoding Fallback für beliebige Suchanfragen
         try {
           const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(name)}&count=1&language=de`);
           const data = await res.json();
@@ -713,7 +803,6 @@
       return { desc, icon };
     }
 
-    // Wetter & Prognose laden
     async function loadWeather(lat, lon) {
       try {
         const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&hourly=temperature_2m,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto`);
@@ -725,7 +814,6 @@
         document.getElementById("w-hum").textContent = current.relative_humidity_2m + "%";
 
         document.getElementById("w-wind-label").textContent = currentLang === 'de' ? 'Wind' : currentLang === 'fr' ? 'Vent' : 'Wind';
-        document.getElementById("w-hum-label").textContent = currentLang === 'de' ? 'Feuchte' : currentLang === 'fr' ? 'Humidité' : 'Humidity';
 
         const details = getWeatherDetails(current.weather_code);
         document.getElementById("w-status").textContent = details.desc;
@@ -740,7 +828,6 @@
       }
     }
 
-    // Prognose umschalten (Stunden / Tage)
     function toggleForecast(mode) {
       const container = document.getElementById("forecast-container");
       const btnHourly = document.getElementById("btn-hourly");
@@ -769,7 +856,6 @@
         const hourly = cachedWeatherData.hourly;
         const currentHour = new Date().getHours();
 
-        // Zeige die nächsten 6 Stunden
         for (let i = currentHour + 1; i <= currentHour + 6; i++) {
           if (!hourly.time[i]) break;
           const timeStr = hourly.time[i].split("T")[1].substring(0, 5);
@@ -787,7 +873,6 @@
       } else if (activeForecastMode === 'daily') {
         const daily = cachedWeatherData.daily;
 
-        // Zeige die nächsten 3 Tage
         for (let i = 1; i <= 3; i++) {
           if (!daily.time[i]) break;
           const dateObj = new Date(daily.time[i]);
@@ -942,6 +1027,8 @@
     updateLegendTexts();
     loadWeather(currentLat, currentLon);
     loadAlerts();
+    
+    // Automatisches Aktualisieren alle 2 Minuten
     setInterval(() => {
       loadAlerts();
       loadWeather(currentLat, currentLon);
