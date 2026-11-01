@@ -118,6 +118,20 @@
     .weather-desc {
       font-size: 0.9rem;
       color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .weather-select {
+      background: var(--card-bg);
+      color: var(--text-color);
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      padding: 2px 6px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
     }
 
     .weather-right {
@@ -335,13 +349,24 @@
     </div>
   </header>
 
-  <!-- Wetter Widget -->
+  <!-- Wetter Widget mit Ortsauswahl -->
   <div class="weather-widget" id="weather-widget">
     <div class="weather-left">
       <span class="weather-icon" id="w-icon">⏳</span>
       <div>
         <div class="weather-temp" id="w-temp">-- °C</div>
-        <div class="weather-desc" id="w-desc">Lade Wetter für Reisdorf...</div>
+        <div class="weather-desc">
+          <select id="location-select" class="weather-select" onchange="loadWeather()">
+            <option value="49.85,6.27" selected>Reisdorf</option>
+            <option value="49.86,6.15">Diekirch</option>
+            <option value="49.84,6.09">Ettelbruck</option>
+            <option value="49.80,6.34">Echternach</option>
+            <option value="49.96,5.93">Wiltz</option>
+            <option value="49.71,6.33">Grevenmacher</option>
+            <option value="49.61,6.13">Luxembourg-Ville</option>
+            <option value="49.50,5.98">Esch-sur-Alzette</option>
+          </select>: <span id="w-status">Lade...</span>
+        </div>
       </div>
     </div>
     <div class="weather-right">
@@ -505,7 +530,6 @@
 
       if (currentLang === 'de') {
         btnText.textContent = isOpen ? "ℹ️ Warnstufen-Legende ausblenden" : "ℹ️ Warnstufen-Legende anzeigen";
-        
         document.getElementById("leg-d-title").textContent = "Akute Gefahr / Sofortiges Handeln";
         document.getElementById("leg-d-sub").textContent = "Warnung die sofortiges Handeln erfordert";
         document.getElementById("leg-n1-title").textContent = "Wachsamkeitsstufe rot / Äußerste Vorsicht (hohes Risiko / große Gefahr)";
@@ -523,7 +547,6 @@
 
       } else if (currentLang === 'fr') {
         btnText.textContent = isOpen ? "ℹ️ Masquer la légende des alertes" : "ℹ️ Afficher la légende des alertes";
-        
         document.getElementById("leg-d-title").textContent = "Danger imminent / Action immédiate";
         document.getElementById("leg-d-sub").textContent = "Alerte nécessitant une action immédiate";
         document.getElementById("leg-n1-title").textContent = "Niveau de vigilance rouge / Vigilance absolue (risque élevé / danger important)";
@@ -541,7 +564,6 @@
 
       } else {
         btnText.textContent = isOpen ? "ℹ️ Hide alert legend" : "ℹ️ Show alert legend";
-        
         document.getElementById("leg-d-title").textContent = "Imminent danger / Immediate action";
         document.getElementById("leg-d-sub").textContent = "Alert requiring immediate action";
         document.getElementById("leg-n1-title").textContent = "Awareness level red / Utmost vigilance (high risk / significant danger)";
@@ -559,10 +581,14 @@
       }
     }
 
-    // --- Wetter laden (Reisdorf Koordinaten: 49.85, 6.27) ---
+    // --- Wetter laden mit gewählter Ortschaft ---
     async function loadWeather() {
+      const coords = document.getElementById("location-select").value.split(",");
+      const lat = coords[0];
+      const lon = coords[1];
+
       try {
-        const res = await fetch("https://api.open-meteo.com/v1/forecast?latitude=49.85&longitude=6.27&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m");
+        const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m`);
         const data = await res.json();
         
         const temp = data.current.temperature_2m;
@@ -577,7 +603,6 @@
         document.getElementById("w-wind-label").textContent = currentLang === 'de' ? 'Wind' : currentLang === 'fr' ? 'Vent' : 'Wind';
         document.getElementById("w-hum-label").textContent = currentLang === 'de' ? 'Feuchte' : currentLang === 'fr' ? 'Humidité' : 'Humidity';
 
-        // Wetterbeschreibung & Emoji nach WMO Code
         let desc = "Klar";
         let icon = "☀️";
         if (code >= 1 && code <= 3) { desc = currentLang === 'de' ? 'Teilweise bewölkt' : currentLang === 'fr' ? 'Partiellement nuageux' : 'Partly cloudy'; icon = "⛅"; }
@@ -586,11 +611,11 @@
         else if (code >= 71 && code <= 77) { desc = currentLang === 'de' ? 'Schnee' : currentLang === 'fr' ? 'Neige' : 'Snow'; icon = "❄️"; }
         else if (code >= 95) { desc = currentLang === 'de' ? 'Gewitter' : currentLang === 'fr' ? 'Orage' : 'Thunderstorm'; icon = "⚡"; }
 
-        document.getElementById("w-desc").textContent = (currentLang === 'de' ? 'Reisdorf: ' : currentLang === 'fr' ? 'Reisdorf : ' : 'Reisdorf: ') + desc;
+        document.getElementById("w-status").textContent = desc;
         document.getElementById("w-icon").textContent = icon;
 
       } catch (e) {
-        document.getElementById("w-desc").textContent = "Wetterdaten nicht verfügbar";
+        document.getElementById("w-status").textContent = "Nicht verfügbar";
       }
     }
 
