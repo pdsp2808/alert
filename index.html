@@ -310,50 +310,50 @@
         <tr>
           <td><span class="legend-badge tag-D">D</span></td>
           <td>
-            <strong id="leg-d-title">Imminent danger / Immediate action</strong>
-            <span class="legend-sub" id="leg-d-sub">Alert requiring immediate action</span>
+            <strong id="leg-d-title"></strong>
+            <span class="legend-sub" id="leg-d-sub"></span>
           </td>
         </tr>
         <tr>
-          <td><span class="legend-badge tag-N1" id="badge-n1">N1 / S1 / L1</span></td>
+          <td><span class="legend-badge tag-N1" id="badge-n1">N1</span></td>
           <td>
-            <strong id="leg-n1-title">Awareness level red / Utmost vigilance (high risk / significant danger)</strong>
-            <span class="legend-sub" id="leg-n1-sub">The highest alert level</span>
+            <strong id="leg-n1-title"></strong>
+            <span class="legend-sub" id="leg-n1-sub"></span>
           </td>
         </tr>
         <tr>
-          <td><span class="legend-badge tag-N2" id="badge-n2">N2 / S2 / L2</span></td>
+          <td><span class="legend-badge tag-N2" id="badge-n2">N2</span></td>
           <td>
-            <strong id="leg-n2-title">Awareness level orange / Be careful (medium risk / danger)</strong>
-            <span class="legend-sub" id="leg-n2-sub">The medium alert level</span>
+            <strong id="leg-n2-title"></strong>
+            <span class="legend-sub" id="leg-n2-sub"></span>
           </td>
         </tr>
         <tr>
-          <td><span class="legend-badge tag-N3" id="badge-n3">N3 / S3 / L3</span></td>
+          <td><span class="legend-badge tag-N3" id="badge-n3">N3</span></td>
           <td>
-            <strong id="leg-n3-title">Awareness level yellow / Be aware (low risk / potential danger)</strong>
-            <span class="legend-sub" id="leg-n3-sub">The lowest alert level</span>
+            <strong id="leg-n3-title"></strong>
+            <span class="legend-sub" id="leg-n3-sub"></span>
           </td>
         </tr>
         <tr>
           <td><span class="legend-badge tag-A">A</span></td>
           <td>
-            <strong id="leg-a-title">Missing person / kidnapping alert</strong>
-            <span class="legend-sub" id="leg-a-sub">Used for missing person / kidnapping alerts</span>
+            <strong id="leg-a-title"></strong>
+            <span class="legend-sub" id="leg-a-sub"></span>
           </td>
         </tr>
         <tr>
           <td><span class="legend-badge tag-I">I</span></td>
           <td>
-            <strong id="leg-i-title">Information (no risk / no danger)</strong>
-            <span class="legend-sub" id="leg-i-sub">Used for information messages</span>
+            <strong id="leg-i-title"></strong>
+            <span class="legend-sub" id="leg-i-sub"></span>
           </td>
         </tr>
         <tr>
           <td><span class="legend-badge tag-T">T</span></td>
           <td>
-            <strong id="leg-t-title">Test (no risk / no danger)</strong>
-            <span class="legend-sub" id="leg-t-sub">Used for test and exercice messages</span>
+            <strong id="leg-t-title"></strong>
+            <span class="legend-sub" id="leg-t-sub"></span>
           </td>
         </tr>
       </tbody>
@@ -438,40 +438,86 @@
       const btnText = document.getElementById("legend-btn-text");
       const isOpen = document.getElementById("legend-content").classList.contains("open");
       
-      document.getElementById("badge-n1").textContent = currentLang === 'de' ? 'S1' : currentLang === 'en' ? 'L1' : 'N1';
-      document.getElementById("badge-n2").textContent = currentLang === 'de' ? 'S2' : currentLang === 'en' ? 'L2' : 'N2';
-      document.getElementById("badge-n3").textContent = currentLang === 'de' ? 'S3' : currentLang === 'en' ? 'L3' : 'N3';
+      // Stufen-Bezeichnungen im Badge je nach Sprache (DE -> S, EN -> L, FR -> N)
+      const prefix = currentLang === 'de' ? 'S' : currentLang === 'en' ? 'L' : 'N';
+      document.getElementById("badge-n1").textContent = prefix + '1';
+      document.getElementById("badge-n2").textContent = prefix + '2';
+      document.getElementById("badge-n3").textContent = prefix + '3';
 
       document.getElementById("th-desc").textContent = currentLang === 'de' ? 'Beschreibung' : currentLang === 'fr' ? 'Description' : 'Description';
 
-      // Legende Originaltexte auf Englisch (wie gewünscht aus dem Bild)[cite: 3]
-      document.getElementById("leg-d-title").textContent = "Imminent danger / Immediate action";
-      document.getElementById("leg-d-sub").textContent = "Alert requiring immediate action";
-
-      document.getElementById("leg-n1-title").textContent = "Awareness level red / Utmost vigilance (high risk / significant danger)";
-      document.getElementById("leg-n1-sub").textContent = "The highest alert level";
-
-      document.getElementById("leg-n2-title").textContent = "Awareness level orange / Be careful (medium risk / danger)";
-      document.getElementById("leg-n2-sub").textContent = "The medium alert level";
-
-      document.getElementById("leg-n3-title").textContent = "Awareness level yellow / Be aware (low risk / potential danger)";
-      document.getElementById("leg-n3-sub").textContent = "The lowest alert level";
-
-      document.getElementById("leg-a-title").textContent = "Missing person / kidnapping alert";
-      document.getElementById("leg-a-sub").textContent = "Used for missing person / kidnapping alerts";
-
-      document.getElementById("leg-i-title").textContent = "Information (no risk / no danger)";
-      document.getElementById("leg-i-sub").textContent = "Used for information messages";
-
-      document.getElementById("leg-t-title").textContent = "Test (no risk / no danger)";
-      document.getElementById("leg-t-sub").textContent = "Used for test and exercice messages";
-
+      // Offizielle Originaltexte exakt aus den Bildvorgaben für DE, FR und EN
       if (currentLang === 'de') {
         btnText.textContent = isOpen ? "ℹ️ Warnstufen-Legende ausblenden" : "ℹ️ Warnstufen-Legende anzeigen";
+        
+        document.getElementById("leg-d-title").textContent = "Akute Gefahr / Sofortiges Handeln";
+        document.getElementById("leg-d-sub").textContent = "Warnung die sofortiges Handeln erfordert";
+
+        document.getElementById("leg-n1-title").textContent = "Wachsamkeitsstufe rot / Äußerste Vorsicht (hohes Risiko / große Gefahr)";
+        document.getElementById("leg-n1-sub").textContent = "Die höchste Warnstufe";
+
+        document.getElementById("leg-n2-title").textContent = "Wachsamkeitsstufe orange / Seien Sie vorsichtig (mittleres Risiko / Gefahr)";
+        document.getElementById("leg-n2-sub").textContent = "Die mittlere Warnstufe";
+
+        document.getElementById("leg-n3-title").textContent = "Wachsamkeitsstufe gelb / Seien Sie aufmerksam (geringes Risiko / potentielle Gefahr)";
+        document.getElementById("leg-n3-sub").textContent = "Die niedrigste Warnstufe";
+
+        document.getElementById("leg-a-title").textContent = "Vermissten- / Entführungsmeldung";
+        document.getElementById("leg-a-sub").textContent = "Warnung bei Vermissten- / Entführungssituationen";
+
+        document.getElementById("leg-i-title").textContent = "Information (kein Risiko / keine Gefahr)";
+        document.getElementById("leg-i-sub").textContent = "Für Informationsmeldungen";
+
+        document.getElementById("leg-t-title").textContent = "Test (kein Risiko / keine Gefahr)";
+        document.getElementById("leg-t-sub").textContent = "Für Test- und Übungszwecke";
+
       } else if (currentLang === 'fr') {
         btnText.textContent = isOpen ? "ℹ️ Masquer la légende des alertes" : "ℹ️ Afficher la légende des alertes";
+        
+        document.getElementById("leg-d-title").textContent = "Danger imminent / Action immédiate";
+        document.getElementById("leg-d-sub").textContent = "Alerte nécessitant une action immédiate";
+
+        document.getElementById("leg-n1-title").textContent = "Niveau de vigilance rouge / Vigilance absolue (risque élevé / danger important)";
+        document.getElementById("leg-n1-sub").textContent = "Le niveau d’alerte le plus élevé";
+
+        document.getElementById("leg-n2-title").textContent = "Niveau de vigilance orange / Soyez prudents (risque moyen / danger)";
+        document.getElementById("leg-n2-sub").textContent = "Le niveau d’alerte moyen";
+
+        document.getElementById("leg-n3-title").textContent = "Niveau de vigilance jaune / Soyez attentifs (faible risque / danger potentiel)";
+        document.getElementById("leg-n3-sub").textContent = "Le niveau d’alerte le plus bas";
+
+        document.getElementById("leg-a-title").textContent = "Disparition / enlèvement";
+        document.getElementById("leg-a-sub").textContent = "Utilisé pour des alertes de disparition / d'enlèvement";
+
+        document.getElementById("leg-i-title").textContent = "Information (pas de risque / pas de danger)";
+        document.getElementById("leg-i-sub").textContent = "Utilisé pour des messages d’information";
+
+        document.getElementById("leg-t-title").textContent = "Test (pas de risque / pas de danger)";
+        document.getElementById("leg-t-sub").textContent = "Utilisé pour des messages de test et d'exercice";
+
       } else {
         btnText.textContent = isOpen ? "ℹ️ Hide alert legend" : "ℹ️ Show alert legend";
+        
+        document.getElementById("leg-d-title").textContent = "Imminent danger / Immediate action";
+        document.getElementById("leg-d-sub").textContent = "Alert requiring immediate action";
+
+        document.getElementById("leg-n1-title").textContent = "Awareness level red / Utmost vigilance (high risk / significant danger)";
+        document.getElementById("leg-n1-sub").textContent = "The highest alert level";
+
+        document.getElementById("leg-n2-title").textContent = "Awareness level orange / Be careful (medium risk / danger)";
+        document.getElementById("leg-n2-sub").textContent = "The medium alert level";
+
+        document.getElementById("leg-n3-title").textContent = "Awareness level yellow / Be aware (low risk / potential danger)";
+        document.getElementById("leg-n3-sub").textContent = "The lowest alert level";
+
+        document.getElementById("leg-a-title").textContent = "Missing person / kidnapping alert";
+        document.getElementById("leg-a-sub").textContent = "Used for missing person / kidnapping alerts";
+
+        document.getElementById("leg-i-title").textContent = "Information (no risk / no danger)";
+        document.getElementById("leg-i-sub").textContent = "Used for information messages";
+
+        document.getElementById("leg-t-title").textContent = "Test (no risk / no danger)";
+        document.getElementById("leg-t-sub").textContent = "Used for test and exercice messages";
       }
     }
 
@@ -575,7 +621,9 @@
         });
       } catch(e) {}
 
+      // Texte für Gültigkeit je nach Sprache
       const labelValid = currentLang === 'de' ? 'Gültig' : currentLang === 'fr' ? 'Valable' : 'Valid';
+      const labelUntil = currentLang === 'de' ? 'bis' : currentLang === 'fr' ? 'au' : 'until';
       const labelSource = currentLang === 'de' ? 'Quelle' : currentLang === 'fr' ? 'Source' : 'Source';
       const levelLabel = currentLang === 'de' ? 'Stufe' : currentLang === 'fr' ? 'Niveau' : 'Level';
       const foodTitle = currentLang === 'de' ? '🍎 Lebensmittel- & Produktrückrufe (1)' : currentLang === 'fr' ? '🍎 Rappels d\'aliments et produits (1)' : '🍎 Food & Product Recalls (1)';
@@ -585,7 +633,7 @@
         <article class="alert-card level-${levelCodeRaw}">
           <div class="meta">
             <span class="level-tag tag-${levelCodeRaw}">${levelLabel}: ${displayLevel}</span>
-            <span>${labelValid}: ${effectiveStr} – ${expiresStr}</span>
+            <span>${labelValid}: ${effectiveStr} — ${labelUntil} ${expiresStr}</span>
             <span>${labelSource}: ${sender}</span>
           </div>
           <div class="headline">${headline}</div>
