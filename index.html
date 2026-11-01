@@ -54,15 +54,26 @@
       gap: 12px;
     }
 
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand img {
+      height: 38px;
+      width: auto;
+    }
+
     h1 {
-      font-size: 1.4rem;
+      font-size: 1.3rem;
       font-weight: 700;
     }
 
     .controls {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
     }
 
     .lang-btn, .theme-btn {
@@ -98,7 +109,7 @@
       display: inline-block;
     }
 
-    /* Offizielle LU-Alert Farbcodierungen für die Karten */
+    /* Cards & Border colors */
     .alert-card {
       background-color: var(--card-bg);
       border-radius: 8px;
@@ -110,14 +121,13 @@
       border-bottom: 1px solid var(--border-color);
     }
 
-    /* Dynamische linke Rahmenfarben & Badge-Farben nach Legende */
-    .level-D  { border-left: 6px solid #8b5cf6; } /* Violett: Danger */
-    .level-N1 { border-left: 6px solid #dc2626; } /* Rot: Vigilance rouge */
-    .level-N2 { border-left: 6px solid #ea580c; } /* Orange: Vigilance orange */
-    .level-N3 { border-left: 6px solid #ca8a04; } /* Gelb: Vigilance jaune */
-    .level-A  { border-left: 6px solid #f97316; } /* Vermisstenmeldung */
-    .level-I  { border-left: 6px solid #65a30d; } /* Information: Grün */
-    .level-T  { border-left: 6px solid #475569; } /* Test: Grau */
+    .level-D  { border-left: 6px solid #8b5cf6; }
+    .level-N1 { border-left: 6px solid #dc2626; }
+    .level-N2 { border-left: 6px solid #ea580c; }
+    .level-N3 { border-left: 6px solid #ca8a04; }
+    .level-A  { border-left: 6px solid #f97316; }
+    .level-I  { border-left: 6px solid #65a30d; }
+    .level-T  { border-left: 6px solid #475569; }
 
     .meta {
       font-size: 0.85rem;
@@ -150,7 +160,7 @@
     .tag-T  { background-color: #475569 !important; }
 
     .headline {
-      font-size: 1.25rem;
+      font-size: 1.2rem;
       font-weight: 700;
       margin-bottom: 12px;
       color: var(--text-color);
@@ -181,8 +191,36 @@
       text-decoration: none;
     }
 
-    .description a:hover {
-      text-decoration: underline;
+    /* Accordion section for food recalls */
+    .collapsible-section {
+      margin-top: 30px;
+      border-top: 2px dashed var(--border-color);
+      padding-top: 20px;
+    }
+
+    .accordion-btn {
+      width: 100%;
+      background-color: var(--card-bg);
+      color: var(--text-color);
+      border: 1px solid var(--border-color);
+      padding: 14px 18px;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      text-align: left;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .accordion-content {
+      display: none;
+      margin-top: 14px;
+    }
+
+    .accordion-content.open {
+      display: block;
     }
 
     .loading, .error {
@@ -202,7 +240,10 @@
 <body>
 
   <header>
-    <h1>LU-Alert Monitor</h1>
+    <div class="brand">
+      <img src="https://data.public.lu/static/avatars/datasets/5f94b39b56f849ffbaecf7bf41bc3326.png" alt="LU-Alert Logo">
+      <h1>LU-Alert Monitor</h1>
+    </div>
     <div class="controls">
       <button class="lang-btn active" onclick="setLanguage('de')">DE</button>
       <button class="lang-btn" onclick="setLanguage('fr')">FR</button>
@@ -213,9 +254,17 @@
 
   <div id="status" class="status-badge">Aktualisiere...</div>
 
-  <main id="alerts-container">
-    <div class="loading">Lade aktuelle Meldungen von LU-Alert...</div>
-  </main>
+  <!-- Bereich für Notfall- und Hauptmeldung(en) -->
+  <main id="primary-alerts"></main>
+
+  <!-- Aufklappbarer Bereich für Lebensmittel- & Produktrückrufe -->
+  <div class="collapsible-section" id="food-section" style="display: none;">
+    <button class="accordion-btn" onclick="toggleAccordion()">
+      <span id="food-accordion-label">🍎 Lebensmittel- & Produktrückrufe</span>
+      <span id="accordion-icon">▼</span>
+    </button>
+    <div class="accordion-content" id="food-alerts-container"></div>
+  </div>
 
   <script>
     const WORKER_URL = "https://lu-alert-proxy.patrick95tuga.workers.dev/";
@@ -241,6 +290,13 @@
       document.getElementById("theme-toggle").textContent = isDark ? "☀️" : "🌙";
     }
 
+    function toggleAccordion() {
+      const content = document.getElementById("food-alerts-container");
+      const icon = document.getElementById("accordion-icon");
+      content.classList.toggle("open");
+      icon.textContent = content.classList.contains("open") ? "▲" : "▼";
+    }
+
     function setLanguage(lang) {
       currentLang = lang;
       document.querySelectorAll('.lang-btn').forEach(btn => {
@@ -255,7 +311,7 @@
     }
 
     async function loadAlerts() {
-      const container = document.getElementById('alerts-container');
+      const primaryContainer = document.getElementById('primary-alerts');
       const statusBadge = document.getElementById('status');
 
       try {
@@ -270,22 +326,28 @@
         statusBadge.textContent = "Stand: " + new Date().toLocaleTimeString("de-DE");
 
       } catch (err) {
-        container.innerHTML = `<div class="error">Fehler beim Laden der Daten: ${err.message}</div>`;
+        primaryContainer.innerHTML = `<div class="error">Fehler beim Laden der Daten: ${err.message}</div>`;
         statusBadge.textContent = "Fehler";
       }
     }
 
     function renderAlerts(xmlText) {
-      const container = document.getElementById('alerts-container');
+      const primaryContainer = document.getElementById('primary-alerts');
+      const foodContainer = document.getElementById('food-alerts-container');
+      const foodSection = document.getElementById('food-section');
+      const foodLabel = document.getElementById('food-accordion-label');
+
       const parser = new DOMParser();
       const xmlDoc = parser.parseFromString(xmlText, "text/xml");
       const infos = xmlDoc.getElementsByTagName("info");
 
       if (infos.length === 0) {
-        container.innerHTML = "<div class='loading'>Aktuell liegen keine aktiven Warnungen vor.</div>";
+        primaryContainer.innerHTML = "<div class='loading'>Aktuell liegen keine aktiven Warnungen vor.</div>";
+        foodSection.style.display = "none";
         return;
       }
 
+      // Sprachsicherer Block
       let targetInfo = null;
       for (let info of infos) {
         const lang = info.getElementsByTagName("language")[0]?.textContent || "";
@@ -296,8 +358,20 @@
       }
       if (!targetInfo) targetInfo = infos[0];
 
-      // Warnstufe aus den Parametern extrahieren (z.B. ALERT_LVL_3 -> N3)
-      let levelCode = "N3"; // Fallback
+      // Prüfen ob es sich um einen Lebensmittelrückruf handelt
+      const category = targetInfo.getElementsByTagName("category")[0]?.textContent || "";
+      let isFoodRecall = category.toLowerCase() === "health";
+      
+      const eventCodes = targetInfo.getElementsByTagName("eventCode");
+      for (let code of eventCodes) {
+        if (code.getElementsByTagName("value")[0]?.textContent === "FOOD_RECALL") {
+          isFoodRecall = true;
+          break;
+        }
+      }
+
+      // Warnstufe ermitteln
+      let levelCode = "N3";
       const parameters = targetInfo.getElementsByTagName("parameter");
       for (let param of parameters) {
         const valName = param.getElementsByTagName("valueName")[0]?.textContent || "";
@@ -324,8 +398,10 @@
 
       const labelFrom = currentLang === 'de' ? 'Gültig ab' : currentLang === 'fr' ? 'Valable à partir de' : 'Valid from';
       const labelSource = currentLang === 'de' ? 'Quelle' : currentLang === 'fr' ? 'Source' : 'Source';
+      const foodTitle = currentLang === 'de' ? '🍎 Lebensmittel- & Produktrückrufe (1)' : currentLang === 'fr' ? '🍎 Rappels d\'aliments et produits (1)' : '🍎 Food & Product Recalls (1)';
+      const noEmergencyText = currentLang === 'de' ? 'Keine akuten Notfall- oder Unwetterwarnungen.' : currentLang === 'fr' ? 'Aucune alerte d\'urgence ou météo active.' : 'No active emergency or weather alerts.';
 
-      container.innerHTML = `
+      const cardHtml = `
         <article class="alert-card level-${levelCode}">
           <div class="meta">
             <span class="level-tag tag-${levelCode}">Stufe: ${levelCode}</span>
@@ -336,6 +412,18 @@
           <div class="description">${description}</div>
         </article>
       `;
+
+      if (isFoodRecall) {
+        // In den Aufklappbereich verschieben & Hauptbereich sauber halten
+        foodSection.style.display = "block";
+        foodLabel.textContent = foodTitle;
+        foodContainer.innerHTML = cardHtml;
+        primaryContainer.innerHTML = `<div class="loading">${noEmergencyText}</div>`;
+      } else {
+        // Direkte Anzeige im Notfall-Hauptbereich
+        foodSection.style.display = "none";
+        primaryContainer.innerHTML = cardHtml;
+      }
     }
 
     initTheme();
