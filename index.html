@@ -85,17 +85,20 @@
       padding: 5px 10px;
     }
 
-    /* Wetter Widget Styling mit Freitext-Suche */
+    /* Wetter Widget Styling */
     .weather-widget {
       background-color: var(--card-bg);
       border: 1px solid var(--border-color);
       border-radius: 8px;
       padding: 16px;
       margin-bottom: 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    .weather-main {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
       flex-wrap: wrap;
       gap: 12px;
     }
@@ -132,7 +135,7 @@
       padding: 3px 8px;
       font-size: 0.85rem;
       font-weight: 600;
-      width: 130px;
+      width: 140px;
     }
 
     .weather-right {
@@ -140,6 +143,66 @@
       color: var(--text-muted);
       display: flex;
       gap: 16px;
+    }
+
+    /* Forecast Sub-Section */
+    .forecast-controls {
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .forecast-btn {
+      background: var(--badge-bg);
+      color: var(--text-color);
+      border: 1px solid var(--border-color);
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .forecast-btn.active {
+      background: #38bdf8;
+      color: #0f172a;
+      border-color: #38bdf8;
+    }
+
+    .forecast-container {
+      display: none;
+      margin-top: 12px;
+      gap: 10px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+
+    .forecast-container.open {
+      display: flex;
+    }
+
+    .forecast-item {
+      background: var(--badge-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 8px 12px;
+      text-align: center;
+      min-width: 80px;
+      flex-shrink: 0;
+      font-size: 0.8rem;
+    }
+
+    .forecast-item .time {
+      font-weight: bold;
+      margin-bottom: 4px;
+    }
+
+    .forecast-item .icon {
+      font-size: 1.3rem;
+      margin: 2px 0;
     }
 
     .legend-toggle-btn {
@@ -350,21 +413,34 @@
     </div>
   </header>
 
-  <!-- Wetter Widget mit Freitext-Ortssuche -->
+  <!-- Wetter Widget mit Autocomplete-Liste & Vorhersage -->
   <div class="weather-widget" id="weather-widget">
-    <div class="weather-left">
-      <span class="weather-icon" id="w-icon">⏳</span>
-      <div>
-        <div class="weather-temp" id="w-temp">-- °C</div>
-        <div class="weather-desc">
-          <input type="text" id="location-input" class="weather-input" value="Reisdorf" onchange="searchLocation()" placeholder="Ort eingeben...">: <span id="w-status">Lade...</span>
+    <div class="weather-main">
+      <div class="weather-left">
+        <span class="weather-icon" id="w-icon">⏳</span>
+        <div>
+          <div class="weather-temp" id="w-temp">-- °C</div>
+          <div class="weather-desc">
+            <input type="text" id="location-input" class="weather-input" value="Reisdorf" list="communes-list" onchange="handleLocationChange()" placeholder="Gemeinde suchen...">
+            <datalist id="communes-list"></datalist>: <span id="w-status">Lade...</span>
+          </div>
         </div>
       </div>
+      <div class="weather-right">
+        <div><span id="w-wind-label">Wind</span>: <strong id="w-wind">-- km/h</strong></div>
+        <div><span id="w-hum-label">Feuchte</span>: <strong id="w-hum">--%</strong></div>
+      </div>
     </div>
-    <div class="weather-right">
-      <div><span id="w-wind-label">Wind</span>: <strong id="w-wind">-- km/h</strong></div>
-      <div><span id="w-hum-label">Feuchte</span>: <strong id="w-hum">--%</strong></div>
+
+    <!-- Prognose Buttons -->
+    <div class="forecast-controls">
+      <span style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted);" id="forecast-label">Prognose:</span>
+      <button class="forecast-btn" id="btn-hourly" onclick="toggleForecast('hourly')">Stunden</button>
+      <button class="forecast-btn" id="btn-daily" onclick="toggleForecast('daily')">Tage</button>
     </div>
+
+    <!-- Vorhersage Anzeige -->
+    <div class="forecast-container" id="forecast-container"></div>
   </div>
 
   <button class="legend-toggle-btn" onclick="toggleLegend()">
@@ -450,8 +526,38 @@
     const WORKER_URL = "https://lu-alert-proxy.patrick95tuga.workers.dev/";
     let currentLang = "de";
     let rawXmlData = null;
-    let currentLat = 49.85; // Standard Reisdorf
+
+    // Gemeinden Luxemburgs mit Koordinaten
+    const COMMUNE_DATA = {
+      "Reisdorf": { lat: 49.85, lon: 6.27 },
+      "Bettendorf": { lat: 49.87, lon: 6.21 },
+      "Diekirch": { lat: 49.86, lon: 6.15 },
+      "Echternach": { lat: 49.80, lon: 6.34 },
+      "Esch-sur-Alzette": { lat: 49.50, lon: 5.98 },
+      "Ettelbruck": { lat: 49.84, lon: 6.09 },
+      "Grevenmacher": { lat: 49.71, lon: 6.33 },
+      "Luxembourg": { lat: 49.61, lon: 6.13 },
+      "Mersch": { lat: 49.74, lon: 6.10 },
+      "Redange": { lat: 49.76, lon: 5.89 },
+      "Remich": { lat: 49.54, lon: 6.36 },
+      "Vianden": { lat: 49.93, lon: 6.20 },
+      "Wiltz": { lat: 49.96, lon: 5.93 }
+    };
+
+    let currentLat = 49.85;
     let currentLon = 6.27;
+    let activeForecastMode = null; // 'hourly', 'daily' oder null
+    let cachedWeatherData = null;
+
+    function initCommuneList() {
+      const datalist = document.getElementById("communes-list");
+      datalist.innerHTML = "";
+      Object.keys(COMMUNE_DATA).forEach(commune => {
+        const option = document.createElement("option");
+        option.value = commune;
+        datalist.appendChild(option);
+      });
+    }
 
     function initTheme() {
       const currentHour = new Date().getHours();
@@ -575,58 +681,129 @@
       }
     }
 
-    // --- Ort per Freitext suchen (Geocoding API) ---
-    async function searchLocation() {
-      const query = document.getElementById("location-input").value;
-      if (!query) return;
-
-      try {
-        const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=1&language=de`);
-        const geoData = await geoRes.json();
-
-        if (geoData.results && geoData.results.length > 0) {
-          currentLat = geoData.results[0].latitude;
-          currentLon = geoData.results[0].longitude;
-          loadWeather(currentLat, currentLon);
-        } else {
-          document.getElementById("w-status").textContent = "Ort nicht gefunden";
-        }
-      } catch (e) {
-        document.getElementById("w-status").textContent = "Fehler bei Suche";
+    // Ort-Änderung verarbeiten
+    async function handleLocationChange() {
+      const name = document.getElementById("location-input").value.trim();
+      if (COMMUNE_DATA[name]) {
+        currentLat = COMMUNE_DATA[name].lat;
+        currentLon = COMMUNE_DATA[name].lon;
+        loadWeather(currentLat, currentLon);
+      } else if (name.length > 2) {
+        // Geocoding Fallback für beliebige Suchanfragen
+        try {
+          const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(name)}&count=1&language=de`);
+          const data = await res.json();
+          if (data.results && data.results.length > 0) {
+            currentLat = data.results[0].latitude;
+            currentLon = data.results[0].longitude;
+            loadWeather(currentLat, currentLon);
+          }
+        } catch (e) {}
       }
     }
 
-    // --- Wetter für Koordinaten laden ---
+    function getWeatherDetails(code) {
+      let desc = "Klar";
+      let icon = "☀️";
+      if (code >= 1 && code <= 3) { desc = currentLang === 'de' ? 'Bewölkt' : currentLang === 'fr' ? 'Nuageux' : 'Cloudy'; icon = "⛅"; }
+      else if (code >= 45 && code <= 48) { desc = currentLang === 'de' ? 'Nebel' : currentLang === 'fr' ? 'Brouillard' : 'Foggy'; icon = "🌫️"; }
+      else if (code >= 51 && code <= 67) { desc = currentLang === 'de' ? 'Regen' : currentLang === 'fr' ? 'Pluie' : 'Rain'; icon = "🌧️"; }
+      else if (code >= 71 && code <= 77) { desc = currentLang === 'de' ? 'Schnee' : currentLang === 'fr' ? 'Neige' : 'Snow'; icon = "❄️"; }
+      else if (code >= 95) { desc = currentLang === 'de' ? 'Gewitter' : currentLang === 'fr' ? 'Orage' : 'Thunderstorm'; icon = "⚡"; }
+      return { desc, icon };
+    }
+
+    // Wetter & Prognose laden
     async function loadWeather(lat, lon) {
       try {
-        const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m`);
-        const data = await res.json();
+        const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&hourly=temperature_2m,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto`);
+        cachedWeatherData = await res.json();
         
-        const temp = data.current.temperature_2m;
-        const hum = data.current.relative_humidity_2m;
-        const wind = data.current.wind_speed_10m;
-        const code = data.current.weather_code;
-
-        document.getElementById("w-temp").textContent = temp + " °C";
-        document.getElementById("w-wind").textContent = wind + " km/h";
-        document.getElementById("w-hum").textContent = hum + "%";
+        const current = cachedWeatherData.current;
+        document.getElementById("w-temp").textContent = current.temperature_2m + " °C";
+        document.getElementById("w-wind").textContent = current.wind_speed_10m + " km/h";
+        document.getElementById("w-hum").textContent = current.relative_humidity_2m + "%";
 
         document.getElementById("w-wind-label").textContent = currentLang === 'de' ? 'Wind' : currentLang === 'fr' ? 'Vent' : 'Wind';
         document.getElementById("w-hum-label").textContent = currentLang === 'de' ? 'Feuchte' : currentLang === 'fr' ? 'Humidité' : 'Humidity';
 
-        let desc = "Klar";
-        let icon = "☀️";
-        if (code >= 1 && code <= 3) { desc = currentLang === 'de' ? 'Teilweise bewölkt' : currentLang === 'fr' ? 'Partiellement nuageux' : 'Partly cloudy'; icon = "⛅"; }
-        else if (code >= 45 && code <= 48) { desc = currentLang === 'de' ? 'Nebel' : currentLang === 'fr' ? 'Brouillard' : 'Foggy'; icon = "🌫️"; }
-        else if (code >= 51 && code <= 67) { desc = currentLang === 'de' ? 'Regen' : currentLang === 'fr' ? 'Pluie' : 'Rain'; icon = "🌧️"; }
-        else if (code >= 71 && code <= 77) { desc = currentLang === 'de' ? 'Schnee' : currentLang === 'fr' ? 'Neige' : 'Snow'; icon = "❄️"; }
-        else if (code >= 95) { desc = currentLang === 'de' ? 'Gewitter' : currentLang === 'fr' ? 'Orage' : 'Thunderstorm'; icon = "⚡"; }
+        const details = getWeatherDetails(current.weather_code);
+        document.getElementById("w-status").textContent = details.desc;
+        document.getElementById("w-icon").textContent = details.icon;
 
-        document.getElementById("w-status").textContent = desc;
-        document.getElementById("w-icon").textContent = icon;
+        if (activeForecastMode) {
+          renderForecast();
+        }
 
       } catch (e) {
         document.getElementById("w-status").textContent = "Nicht verfügbar";
+      }
+    }
+
+    // Prognose umschalten (Stunden / Tage)
+    function toggleForecast(mode) {
+      const container = document.getElementById("forecast-container");
+      const btnHourly = document.getElementById("btn-hourly");
+      const btnDaily = document.getElementById("btn-daily");
+
+      if (activeForecastMode === mode) {
+        activeForecastMode = null;
+        container.classList.remove("open");
+        btnHourly.classList.remove("active");
+        btnDaily.classList.remove("active");
+      } else {
+        activeForecastMode = mode;
+        container.classList.add("open");
+        btnHourly.classList.toggle("active", mode === 'hourly');
+        btnDaily.classList.toggle("active", mode === 'daily');
+        renderForecast();
+      }
+    }
+
+    function renderForecast() {
+      if (!cachedWeatherData) return;
+      const container = document.getElementById("forecast-container");
+      container.innerHTML = "";
+
+      if (activeForecastMode === 'hourly') {
+        const hourly = cachedWeatherData.hourly;
+        const currentHour = new Date().getHours();
+
+        // Zeige die nächsten 6 Stunden
+        for (let i = currentHour + 1; i <= currentHour + 6; i++) {
+          if (!hourly.time[i]) break;
+          const timeStr = hourly.time[i].split("T")[1].substring(0, 5);
+          const temp = hourly.temperature_2m[i];
+          const details = getWeatherDetails(hourly.weather_code[i]);
+
+          container.innerHTML += `
+            <div class="forecast-item">
+              <div class="time">${timeStr}</div>
+              <div class="icon">${details.icon}</div>
+              <div><strong>${temp}°C</strong></div>
+            </div>
+          `;
+        }
+      } else if (activeForecastMode === 'daily') {
+        const daily = cachedWeatherData.daily;
+
+        // Zeige die nächsten 3 Tage
+        for (let i = 1; i <= 3; i++) {
+          if (!daily.time[i]) break;
+          const dateObj = new Date(daily.time[i]);
+          const dayName = dateObj.toLocaleDateString(currentLang === 'de' ? 'de-DE' : currentLang === 'fr' ? 'fr-FR' : 'en-US', { weekday: 'short' });
+          const maxTemp = Math.round(daily.temperature_2m_max[i]);
+          const minTemp = Math.round(daily.temperature_2m_min[i]);
+          const details = getWeatherDetails(daily.weather_code[i]);
+
+          container.innerHTML += `
+            <div class="forecast-item">
+              <div class="time">${dayName}</div>
+              <div class="icon">${details.icon}</div>
+              <div><strong>${maxTemp}°</strong> / ${minTemp}°</div>
+            </div>
+          `;
+        }
       }
     }
 
@@ -760,6 +937,7 @@
       }
     }
 
+    initCommuneList();
     initTheme();
     updateLegendTexts();
     loadWeather(currentLat, currentLon);
