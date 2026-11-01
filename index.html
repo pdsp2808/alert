@@ -70,13 +70,13 @@
     }
 
     .logo-btn:hover {
-      opacity: 0.85;
+      opacity: 0.8;
     }
 
     .logo-btn svg {
       transition: transform 0.4s ease;
-      height: 34px;
-      width: auto;
+      width: 28px;
+      height: 28px;
     }
 
     .logo-btn.refreshing svg {
@@ -124,7 +124,7 @@
       fill: currentColor;
     }
 
-    /* Modernes, stylisches Wetter-Widget */
+    /* Modernes Wetter-Widget */
     .weather-widget {
       background: linear-gradient(135deg, var(--card-bg) 0%, var(--badge-bg) 100%);
       border: 1px solid var(--border-color);
@@ -281,7 +281,6 @@
       margin: 4px 0;
     }
 
-    /* Legende harmonisiert */
     .legend-toggle-btn {
       background: var(--card-bg);
       color: var(--text-color);
@@ -502,10 +501,12 @@
 
   <header>
     <div class="brand">
+      <!-- Warn-Dreieck SVG Icon (klickbar zum Aktualisieren) -->
       <button class="logo-btn" id="logo-refresh-btn" onclick="triggerManualRefresh()" title="Seite aktualisieren">
-        <svg viewBox="0 0 300 80" height="34" xmlns="http://www.w3.org/2000/svg">
-          <path d="M15 10 H65 V70 H15 Z" fill="#eab308"/>
-          <text x="75" y="55" font-family="Arial, sans-serif" font-weight="bold" font-size="38" fill="currentColor">LU-ALERT</text>
+        <svg viewBox="0 0 24 24" fill="none" stroke="#eab308" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2L2 22h20L12 2z"></path>
+          <line x1="12" y1="9" x2="12" y2="13"></line>
+          <line x1="12" y1="17" x2="12.01" y2="17"></line>
         </svg>
       </button>
       <h1>LU-Alert Monitor</h1>
@@ -522,7 +523,6 @@
     </div>
   </header>
 
-  <!-- Modernes Wetter Widget -->
   <div class="weather-widget" id="weather-widget">
     <div class="weather-main">
       <div class="weather-left">
