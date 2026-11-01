@@ -83,9 +83,21 @@
       transform: rotate(360deg);
     }
 
+    .title-area {
+      display: flex;
+      flex-direction: column;
+    }
+
     h1 {
-      font-size: 1.4rem;
+      font-size: 1.3rem;
       font-weight: 700;
+    }
+
+    /* Status ganz oben im Header wie bei Pegel */
+    .header-status {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 2px;
     }
 
     .controls {
@@ -94,20 +106,18 @@
       gap: 8px;
     }
 
-    .lang-btn, .theme-btn {
+    .lang-select, .theme-btn {
       background-color: var(--card-bg);
       color: var(--text-color);
       border: 1px solid var(--border-color);
-      padding: 6px 12px;
+      padding: 6px 10px;
       border-radius: 6px;
       cursor: pointer;
       font-size: 0.85rem;
       font-weight: 600;
     }
 
-    .lang-btn.active {
-      background-color: var(--accent-color);
-      color: #0f172a;
+    .lang-select:hover, .theme-btn:hover {
       border-color: var(--accent-color);
     }
 
@@ -190,10 +200,6 @@
       font-weight: 700;
       cursor: pointer;
       box-shadow: 0 1px 2px rgba(0,0,0,0.02);
-    }
-
-    .weather-select:hover {
-      border-color: var(--accent-color);
     }
 
     .weather-right {
@@ -281,33 +287,36 @@
       margin: 4px 0;
     }
 
-    .legend-toggle-btn {
+    /* Nahtlos verbundene Legende */
+    .legend-wrapper {
       background: var(--card-bg);
-      color: var(--text-color);
       border: 1px solid var(--border-color);
-      padding: 10px 14px;
       border-radius: 8px;
+      margin-bottom: 20px;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+    }
+
+    .legend-toggle-btn {
+      background: transparent;
+      color: var(--text-color);
+      border: none;
+      padding: 12px 16px;
       font-size: 0.85rem;
       font-weight: 600;
       cursor: pointer;
       width: 100%;
       text-align: left;
-      margin-bottom: 12px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.03);
     }
 
     .legend-content {
       display: none;
-      background-color: var(--card-bg);
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-      padding: 16px;
-      margin-bottom: 20px;
+      padding: 0 16px 16px 16px;
+      border-top: 1px solid var(--border-color);
       font-size: 0.85rem;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
     }
 
     .legend-content.open {
@@ -317,6 +326,7 @@
     .legend-table {
       width: 100%;
       border-collapse: collapse;
+      margin-top: 8px;
     }
 
     .legend-table th, .legend-table td {
@@ -324,6 +334,10 @@
       border-bottom: 1px solid var(--border-color);
       text-align: left;
       vertical-align: top;
+    }
+
+    .legend-table tr:last-child td {
+      border-bottom: none;
     }
 
     .legend-sub {
@@ -340,17 +354,6 @@
       color: #fff;
       font-weight: bold;
       font-size: 0.75rem;
-    }
-
-    .status-badge {
-      font-size: 0.8rem;
-      background-color: var(--badge-bg);
-      border: 1px solid var(--badge-border);
-      color: var(--text-muted);
-      padding: 6px 12px;
-      border-radius: 6px;
-      margin-bottom: 20px;
-      display: inline-block;
     }
 
     .alert-card {
@@ -501,7 +504,6 @@
 
   <header>
     <div class="brand">
-      <!-- Warn-Dreieck SVG Icon (klickbar zum Aktualisieren) -->
       <button class="logo-btn" id="logo-refresh-btn" onclick="triggerManualRefresh()" title="Seite aktualisieren">
         <svg viewBox="0 0 24 24" fill="none" stroke="#eab308" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M12 2L2 22h20L12 2z"></path>
@@ -509,12 +511,19 @@
           <line x1="12" y1="17" x2="12.01" y2="17"></line>
         </svg>
       </button>
-      <h1>LU-Alert Monitor</h1>
+      <div class="title-area">
+        <h1>LU-Alert Monitor</h1>
+        <div id="status" class="header-status">Aktualisiere...</div>
+      </div>
     </div>
     <div class="controls">
-      <button class="lang-btn active" onclick="setLanguage('de')">DE</button>
-      <button class="lang-btn" onclick="setLanguage('fr')">FR</button>
-      <button class="lang-btn" onclick="setLanguage('en')">EN</button>
+      <!-- Kompaktes Sprach-Dropdown -->
+      <select id="lang-select" class="lang-select" onchange="setLanguage(this.value)">
+        <option value="de" selected>DE</option>
+        <option value="fr">FR</option>
+        <option value="en">EN</option>
+      </select>
+      <!-- Tag/Nacht Button -->
       <button class="theme-btn" id="theme-toggle" onclick="toggleTheme()" title="Tag/Nacht Modus">
         <svg id="theme-icon" viewBox="0 0 24 24">
           <path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
@@ -559,74 +568,74 @@
     <div class="forecast-container" id="forecast-container"></div>
   </div>
 
-  <button class="legend-toggle-btn" onclick="toggleLegend()">
-    <span id="legend-btn-text">ℹ️ Warnstufen-Legende anzeigen</span>
-    <span id="legend-icon">▼</span>
-  </button>
-
-  <div class="legend-content" id="legend-content">
-    <table class="legend-table">
-      <thead>
-        <tr>
-          <th>Stufe</th>
-          <th id="th-desc">Beschreibung</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td><span class="legend-badge tag-D">D</span></td>
-          <td>
-            <strong id="leg-d-title"></strong>
-            <span class="legend-sub" id="leg-d-sub"></span>
-          </td>
-        </tr>
-        <tr>
-          <td><span class="legend-badge tag-N1" id="badge-n1">N1</span></td>
-          <td>
-            <strong id="leg-n1-title"></strong>
-            <span class="legend-sub" id="leg-n1-sub"></span>
-          </td>
-        </tr>
-        <tr>
-          <td><span class="legend-badge tag-N2" id="badge-n2">N2</span></td>
-          <td>
-            <strong id="leg-n2-title"></strong>
-            <span class="legend-sub" id="leg-n2-sub"></span>
-          </td>
-        </tr>
-        <tr>
-          <td><span class="legend-badge tag-N3" id="badge-n3">N3</span></td>
-          <td>
-            <strong id="leg-n3-title"></strong>
-            <span class="legend-sub" id="leg-n3-sub"></span>
-          </td>
-        </tr>
-        <tr>
-          <td><span class="legend-badge tag-A">A</span></td>
-          <td>
-            <strong id="leg-a-title"></strong>
-            <span class="legend-sub" id="leg-a-sub"></span>
-          </td>
-        </tr>
-        <tr>
-          <td><span class="legend-badge tag-I">I</span></td>
-          <td>
-            <strong id="leg-i-title"></strong>
-            <span class="legend-sub" id="leg-i-sub"></span>
-          </td>
-        </tr>
-        <tr>
-          <td><span class="legend-badge tag-T">T</span></td>
-          <td>
-            <strong id="leg-t-title"></strong>
-            <span class="legend-sub" id="leg-t-sub"></span>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+  <!-- Nahtlos verbundene Legende -->
+  <div class="legend-wrapper">
+    <button class="legend-toggle-btn" onclick="toggleLegend()">
+      <span id="legend-btn-text">ℹ️ Warnstufen-Legende anzeigen</span>
+      <span id="legend-icon">▼</span>
+    </button>
+    <div class="legend-content" id="legend-content">
+      <table class="legend-table">
+        <thead>
+          <tr>
+            <th>Stufe</th>
+            <th id="th-desc">Beschreibung</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="legend-badge tag-D">D</span></td>
+            <td>
+              <strong id="leg-d-title"></strong>
+              <span class="legend-sub" id="leg-d-sub"></span>
+            </td>
+          </tr>
+          <tr>
+            <td><span class="legend-badge tag-N1" id="badge-n1">N1</span></td>
+            <td>
+              <strong id="leg-n1-title"></strong>
+              <span class="legend-sub" id="leg-n1-sub"></span>
+            </td>
+          </tr>
+          <tr>
+            <td><span class="legend-badge tag-N2" id="badge-n2">N2</span></td>
+            <td>
+              <strong id="leg-n2-title"></strong>
+              <span class="legend-sub" id="leg-n2-sub"></span>
+            </td>
+          </tr>
+          <tr>
+            <td><span class="legend-badge tag-N3" id="badge-n3">N3</span></td>
+            <td>
+              <strong id="leg-n3-title"></strong>
+              <span class="legend-sub" id="leg-n3-sub"></span>
+            </td>
+          </tr>
+          <tr>
+            <td><span class="legend-badge tag-A">A</span></td>
+            <td>
+              <strong id="leg-a-title"></strong>
+              <span class="legend-sub" id="leg-a-sub"></span>
+            </td>
+          </tr>
+          <tr>
+            <td><span class="legend-badge tag-I">I</span></td>
+            <td>
+              <strong id="leg-i-title"></strong>
+              <span class="legend-sub" id="leg-i-sub"></span>
+            </td>
+          </tr>
+          <tr>
+            <td><span class="legend-badge tag-T">T</span></td>
+            <td>
+              <strong id="leg-t-title"></strong>
+              <span class="legend-sub" id="leg-t-sub"></span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   </div>
-
-  <div id="status" class="status-badge">Aktualisiere...</div>
 
   <main id="primary-alerts"></main>
 
@@ -757,9 +766,11 @@
 
       if (isNight) {
         document.body.classList.add("dark-mode");
+        // Sonne-Icon wenn im Nachtmodus (Klick wechselt zu Tag)
         iconSvg.innerHTML = '<path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>';
       } else {
         document.body.classList.remove("dark-mode");
+        // Mond-Icon wenn im Tagmodus (Klick wechselt zu Nacht)
         iconSvg.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
       }
     }
@@ -813,12 +824,7 @@
 
     function setLanguage(lang) {
       currentLang = lang;
-      document.querySelectorAll('.lang-btn').forEach(btn => {
-        btn.classList.remove('active');
-        if (btn.textContent.toLowerCase() === lang) {
-          btn.classList.add('active');
-        }
-      });
+      document.getElementById("lang-select").value = lang;
       updateTexts();
       loadWeather(currentLat, currentLon);
       if (rawXmlData) {
