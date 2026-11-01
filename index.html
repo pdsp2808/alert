@@ -6,7 +6,6 @@
   <title>LU-Alert Monitor</title>
   <style>
     :root {
-      /* Tagmodus Variablen */
       --bg-color: #f8fafc;
       --card-bg: #ffffff;
       --text-color: #0f172a;
@@ -17,7 +16,6 @@
     }
 
     body.dark-mode {
-      /* Nachtmodus Variablen */
       --bg-color: #0f172a;
       --card-bg: #1e293b;
       --text-color: #f8fafc;
@@ -49,19 +47,13 @@
       align-items: center;
       border-bottom: 2px solid var(--border-color);
       padding-bottom: 16px;
-      margin-bottom: 24px;
+      margin-bottom: 16px;
       flex-wrap: wrap;
       gap: 12px;
     }
 
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
     h1 {
-      font-size: 1.3rem;
+      font-size: 1.4rem;
       font-weight: 700;
     }
 
@@ -91,6 +83,58 @@
     .theme-btn {
       font-size: 1rem;
       padding: 5px 10px;
+    }
+
+    /* Legende Bereich */
+    .legend-toggle-btn {
+      background: var(--card-bg);
+      color: var(--text-color);
+      border: 1px solid var(--border-color);
+      padding: 8px 14px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      width: 100%;
+      text-align: left;
+      margin-bottom: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .legend-content {
+      display: none;
+      background-color: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 20px;
+      font-size: 0.85rem;
+    }
+
+    .legend-content.open {
+      display: block;
+    }
+
+    .legend-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .legend-table th, .legend-table td {
+      padding: 8px;
+      border-bottom: 1px solid var(--border-color);
+      text-align: left;
+    }
+
+    .legend-badge {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: #fff;
+      font-weight: bold;
+      font-size: 0.75rem;
     }
 
     .status-badge {
@@ -186,7 +230,6 @@
       text-decoration: none;
     }
 
-    /* Accordion section for food recalls */
     .collapsible-section {
       margin-top: 30px;
       border-top: 2px dashed var(--border-color);
@@ -235,14 +278,7 @@
 <body>
 
   <header>
-    <div class="brand">
-      <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#eab308" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M12 2L2 22h20L12 2z"></path>
-        <line x1="12" y1="9" x2="12" y2="13"></line>
-        <line x1="12" y1="17" x2="12.01" y2="17"></line>
-      </svg>
-      <h1>LU-Alert Monitor</h1>
-    </div>
+    <h1>LU-Alert Monitor</h1>
     <div class="controls">
       <button class="lang-btn active" onclick="setLanguage('de')">DE</button>
       <button class="lang-btn" onclick="setLanguage('fr')">FR</button>
@@ -251,12 +287,58 @@
     </div>
   </header>
 
+  <!-- Legende Toggle Button -->
+  <button class="legend-toggle-btn" onclick="toggleLegend()">
+    <span id="legend-btn-text">ℹ️ Warnstufen-Legende anzeigen</span>
+    <span id="legend-icon">▼</span>
+  </button>
+
+  <!-- Legende Inhalt -->
+  <div class="legend-content" id="legend-content">
+    <table class="legend-table">
+      <thead>
+        <tr>
+          <th>Stufe</th>
+          <th id="th-desc">Beschreibung</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="legend-badge tag-D">D</span></td>
+          <td id="leg-d">Akute Gefahr / Sofortiges Handeln</td>
+        </tr>
+        <tr>
+          <td><span class="legend-badge tag-N1" id="badge-n1">N1 / S1 / L1</span></td>
+          <td id="leg-n1">Höchste Warnstufe / Äußerste Vorsicht (Rot)</td>
+        </tr>
+        <tr>
+          <td><span class="legend-badge tag-N2" id="badge-n2">N2 / S2 / L2</span></td>
+          <td id="leg-n2">Mittlere Warnstufe / Vorsicht geboten (Orange)</td>
+        </tr>
+        <tr>
+          <td><span class="legend-badge tag-N3" id="badge-n3">N3 / S3 / L3</span></td>
+          <td id="leg-n3">Niedrigste Warnstufe / Aufmerksam sein (Gelb)</td>
+        </tr>
+        <tr>
+          <td><span class="legend-badge tag-A">A</span></td>
+          <td id="leg-a">Vermissten- / Entführungs-Meldung</td>
+        </tr>
+        <tr>
+          <td><span class="legend-badge tag-I">I</span></td>
+          <td id="leg-i">Information (Kein Risiko / Keine Gefahr)</td>
+        </tr>
+        <tr>
+          <td><span class="legend-badge tag-T">T</span></td>
+          <td id="leg-t">Test- / Übungszwecke</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
   <div id="status" class="status-badge">Aktualisiere...</div>
 
-  <!-- Hauptbereich für akute Meldungen -->
   <main id="primary-alerts"></main>
 
-  <!-- Aufklappbarer Bereich für Lebensmittelrückrufe -->
   <div class="collapsible-section" id="food-section" style="display: none;">
     <button class="accordion-btn" onclick="toggleAccordion()">
       <span id="food-accordion-label">🍎 Lebensmittel- & Produktrückrufe</span>
@@ -289,6 +371,23 @@
       document.getElementById("theme-toggle").textContent = isDark ? "☀️" : "🌙";
     }
 
+    function toggleLegend() {
+      const content = document.getElementById("legend-content");
+      const icon = document.getElementById("legend-icon");
+      const btnText = document.getElementById("legend-btn-text");
+      content.classList.toggle("open");
+      const isOpen = content.classList.contains("open");
+      icon.textContent = isOpen ? "▲" : "▼";
+      
+      if (currentLang === 'de') {
+        btnText.textContent = isOpen ? "ℹ️ Warnstufen-Legende ausblenden" : "ℹ️ Warnstufen-Legende anzeigen";
+      } else if (currentLang === 'fr') {
+        btnText.textContent = isOpen ? "ℹ️ Masquer la légende des alertes" : "ℹ️ Afficher la légende des alertes";
+      } else {
+        btnText.textContent = isOpen ? "ℹ️ Hide alert legend" : "ℹ️ Show alert legend";
+      }
+    }
+
     function toggleAccordion() {
       const content = document.getElementById("food-alerts-container");
       const icon = document.getElementById("accordion-icon");
@@ -304,8 +403,49 @@
           btn.classList.add('active');
         }
       });
+      updateLegendTexts();
       if (rawXmlData) {
         renderAlerts(rawXmlData);
+      }
+    }
+
+    function updateLegendTexts() {
+      const btnText = document.getElementById("legend-btn-text");
+      const isOpen = document.getElementById("legend-content").classList.contains("open");
+      
+      document.getElementById("badge-n1").textContent = currentLang === 'de' ? 'S1' : currentLang === 'en' ? 'L1' : 'N1';
+      document.getElementById("badge-n2").textContent = currentLang === 'de' ? 'S2' : currentLang === 'en' ? 'L2' : 'N2';
+      document.getElementById("badge-n3").textContent = currentLang === 'de' ? 'S3' : currentLang === 'en' ? 'L3' : 'N3';
+
+      document.getElementById("th-desc").textContent = currentLang === 'de' ? 'Beschreibung' : currentLang === 'fr' ? 'Description' : 'Description';
+
+      if (currentLang === 'de') {
+        btnText.textContent = isOpen ? "ℹ️ Warnstufen-Legende ausblenden" : "ℹ️ Warnstufen-Legende anzeigen";
+        document.getElementById("leg-d").textContent = "Akute Gefahr / Sofortiges Handeln";
+        document.getElementById("leg-n1").textContent = "Höchste Warnstufe / Äußerste Vorsicht (Rot)";
+        document.getElementById("leg-n2").textContent = "Mittlere Warnstufe / Vorsicht geboten (Orange)";
+        document.getElementById("leg-n3").textContent = "Niedrigste Warnstufe / Aufmerksam sein (Gelb)";
+        document.getElementById("leg-a").textContent = "Vermissten- / Entführungs-Meldung";
+        document.getElementById("leg-i").textContent = "Information (Kein Risiko / Keine Gefahr)";
+        document.getElementById("leg-t").textContent = "Test- / Übungszwecke";
+      } else if (currentLang === 'fr') {
+        btnText.textContent = isOpen ? "ℹ️ Masquer la légende des alertes" : "ℹ️ Afficher la légende des alertes";
+        document.getElementById("leg-d").textContent = "Danger imminent / Action immédiate";
+        document.getElementById("leg-n1").textContent = "Vigilance rouge / Danger important";
+        document.getElementById("leg-n2").textContent = "Vigilance orange / Soyez prudents";
+        document.getElementById("leg-n3").textContent = "Vigilance jaune / Danger potentiel";
+        document.getElementById("leg-a").textContent = "Disparition / enlèvement";
+        document.getElementById("leg-i").textContent = "Information (pas de risque)";
+        document.getElementById("leg-t").textContent = "Test (pas de risque)";
+      } else {
+        btnText.textContent = isOpen ? "ℹ️ Hide alert legend" : "ℹ️ Show alert legend";
+        document.getElementById("leg-d").textContent = "Imminent danger / Immediate action";
+        document.getElementById("leg-n1").textContent = "Red alert / High risk";
+        document.getElementById("leg-n2").textContent = "Orange alert / Moderate risk";
+        document.getElementById("leg-n3").textContent = "Yellow alert / Potential risk";
+        document.getElementById("leg-a").textContent = "Missing person alert";
+        document.getElementById("leg-i").textContent = "Information (no risk)";
+        document.getElementById("leg-t").textContent = "Test / Exercise";
       }
     }
 
@@ -356,7 +496,6 @@
       }
       if (!targetInfo) targetInfo = infos[0];
 
-      // Prüfen ob Lebensmittelrückruf
       const category = targetInfo.getElementsByTagName("category")[0]?.textContent || "";
       let isFoodRecall = category.toLowerCase() === "health";
       
@@ -368,17 +507,23 @@
         }
       }
 
-      // Warnstufe ermitteln
-      let levelCode = "N3";
+      let levelCodeRaw = "N3";
       const parameters = targetInfo.getElementsByTagName("parameter");
       for (let param of parameters) {
         const valName = param.getElementsByTagName("valueName")[0]?.textContent || "";
         const val = param.getElementsByTagName("value")[0]?.textContent || "";
         if (valName.includes("cb-eu-level")) {
-          if (val === "ALERT_LVL_1") levelCode = "N1";
-          else if (val === "ALERT_LVL_2") levelCode = "N2";
-          else if (val === "ALERT_LVL_3") levelCode = "N3";
+          if (val === "ALERT_LVL_1") levelCodeRaw = "N1";
+          else if (val === "ALERT_LVL_2") levelCodeRaw = "N2";
+          else if (val === "ALERT_LVL_3") levelCodeRaw = "N3";
         }
+      }
+
+      // Buchstabe je nach Sprache anpassen (DE -> S, EN -> L, FR -> N)
+      let displayLevel = levelCodeRaw;
+      if (levelCodeRaw.startsWith("N")) {
+        if (currentLang === 'de') displayLevel = levelCodeRaw.replace("N", "S");
+        if (currentLang === 'en') displayLevel = levelCodeRaw.replace("N", "L");
       }
 
       const headline = targetInfo.getElementsByTagName("headline")[0]?.textContent || "Warnmeldung";
@@ -396,13 +541,14 @@
 
       const labelFrom = currentLang === 'de' ? 'Gültig ab' : currentLang === 'fr' ? 'Valable à partir de' : 'Valid from';
       const labelSource = currentLang === 'de' ? 'Quelle' : currentLang === 'fr' ? 'Source' : 'Source';
+      const levelLabel = currentLang === 'de' ? 'Stufe' : currentLang === 'fr' ? 'Niveau' : 'Level';
       const foodTitle = currentLang === 'de' ? '🍎 Lebensmittel- & Produktrückrufe (1)' : currentLang === 'fr' ? '🍎 Rappels d\'aliments et produits (1)' : '🍎 Food & Product Recalls (1)';
       const noEmergencyText = currentLang === 'de' ? 'Keine akuten Notfall- oder Unwetterwarnungen.' : currentLang === 'fr' ? 'Aucune alerte d\'urgence ou météo active.' : 'No active emergency or weather alerts.';
 
       const cardHtml = `
-        <article class="alert-card level-${levelCode}">
+        <article class="alert-card level-${levelCodeRaw}">
           <div class="meta">
-            <span class="level-tag tag-${levelCode}">Stufe: ${levelCode}</span>
+            <span class="level-tag tag-${levelCodeRaw}">${levelLabel}: ${displayLevel}</span>
             <span>${labelFrom}: ${dateStr}</span>
             <span>${labelSource}: ${sender}</span>
           </div>
@@ -423,6 +569,7 @@
     }
 
     initTheme();
+    updateLegendTexts();
     loadAlerts();
     setInterval(loadAlerts, 120000);
   </script>
