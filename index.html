@@ -1,856 +1,224 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="de" class="light">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>LU-Alert & Wetter Monitor</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: { extend: { colors: { brand: { 50: '#f0fdf4', 500: '#22c55e', 600: '#16a34a', 900: '#14532d' } } } }
+    }
+  </script>
+  
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
   <style>
-    :root {
-      --bg-color: #f8fafc;
-      --card-bg: #ffffff;
-      --text-color: #0f172a;
-      --text-muted: #64748b;
-      --border-color: #e2e8f0;
-      --badge-bg: #f1f5f9;
-      --badge-border: #cbd5e1;
-      --accent-color: #38bdf8;
-    }
-
-    body.dark-mode {
-      --bg-color: #0f172a;
-      --card-bg: #1e293b;
-      --text-color: #f8fafc;
-      --text-muted: #94a3b8;
-      --border-color: #334155;
-      --badge-bg: #0f172a;
-      --badge-border: #334155;
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      transition: background-color 0.3s, color 0.3s, border-color 0.3s;
-    }
-
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background-color: var(--bg-color);
-      color: var(--text-color);
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 20px;
-    }
-
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 2px solid var(--border-color);
-      padding-bottom: 16px;
-      margin-bottom: 16px;
-      flex-wrap: wrap;
-      gap: 12px;
-    }
-
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .icon-box {
-      background: #3b82f6;
-      border-radius: 8px;
-      width: 42px;
-      height: 42px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-
-    .icon-box svg {
-      width: 24px;
-      height: 24px;
-      stroke: #ffffff;
-    }
-
-    .title-area {
-      display: flex;
-      flex-direction: column;
-    }
-
-    h1 {
-      font-size: 1.25rem;
-      font-weight: 700;
-      color: var(--text-color);
-      line-height: 1.2;
-    }
-
-    .subtitle {
-      font-size: 0.8rem;
-      color: var(--text-muted);
-      margin-top: 3px;
-    }
-
-    .subtitle a {
-      color: var(--text-muted);
-      text-decoration: none;
-    }
-
-    .subtitle a:hover {
-      text-decoration: underline;
-    }
-
-    @media (max-width: 550px) {
-      .source-break {
-        display: block;
-        margin-top: 1px;
-      }
-    }
-
-    .header-right {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-    }
-
-    .stand-box {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      font-size: 0.75rem;
-      color: var(--text-muted);
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .stand-box span:last-child {
-      font-size: 0.9rem;
-      font-weight: 700;
-      color: var(--text-color);
-    }
-
-    .refresh-btn, .theme-btn {
-      background-color: var(--card-bg);
-      color: var(--text-color);
-      border: 1px solid var(--border-color);
-      padding: 8px;
-      border-radius: 8px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.02);
-    }
-
-    .refresh-btn:hover, .theme-btn:hover {
-      border-color: var(--accent-color);
-    }
-
-    .refresh-btn svg {
-      width: 18px;
-      height: 18px;
-      fill: currentColor;
-      transition: transform 0.4s ease;
-    }
-
-    .refresh-btn.refreshing svg {
-      transform: rotate(360deg);
-    }
-
-    .theme-btn svg {
-      width: 18px;
-      height: 18px;
-      fill: currentColor;
-    }
-
-    .controls {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .lang-select {
-      background-color: var(--card-bg);
-      color: var(--text-color);
-      border: 1px solid var(--border-color);
-      padding: 7px 10px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 0.85rem;
-      font-weight: 600;
-    }
-
-    .lang-select:hover {
-      border-color: var(--accent-color);
-    }
-
-    .weather-widget {
-      background: linear-gradient(135deg, var(--card-bg) 0%, var(--badge-bg) 100%);
-      border: 1px solid var(--border-color);
-      border-radius: 12px;
-      padding: 20px;
-      margin-bottom: 20px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.03);
-    }
-
-    .weather-top-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 14px;
-      flex-wrap: wrap;
-      gap: 16px;
-    }
-
-    .weather-main {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      flex-wrap: wrap;
-    }
-
-    .weather-icon-container {
-      background: var(--card-bg);
-      border: 1px solid var(--border-color);
-      border-radius: 10px;
-      padding: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.02);
-    }
-
-    .weather-icon {
-      font-size: 2.4rem;
-      line-height: 1;
-    }
-
-    .weather-temp-area {
-      display: flex;
-      flex-direction: column;
-    }
-
-    .weather-temp-line {
-      display: flex;
-      align-items: baseline;
-      gap: 10px;
-    }
-
-    .weather-temp {
-      font-size: 1.8rem;
-      font-weight: 800;
-      letter-spacing: -0.5px;
-    }
-
-    .weather-status-text {
-      font-size: 0.95rem;
-      font-weight: 600;
-      color: var(--text-muted);
-    }
-
-    .weather-select {
-      background: var(--card-bg);
-      color: var(--text-color);
-      border: 1px solid var(--border-color);
-      border-radius: 6px;
-      padding: 4px 10px;
-      font-size: 0.85rem;
-      font-weight: 600;
-      cursor: pointer;
-      margin-top: 4px;
-      display: inline-block;
-    }
-
-    .weather-right {
-      display: flex;
-      gap: 16px;
-      background: var(--card-bg);
-      border: 1px solid var(--border-color);
-      padding: 10px 16px;
-      border-radius: 8px;
-      font-size: 0.85rem;
-      color: var(--text-muted);
-      box-shadow: 0 2px 4px rgba(0,0,0,0.02);
-    }
-
-    .weather-right div {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-    }
-
-    .weather-right strong {
-      color: var(--text-color);
-      font-size: 0.95rem;
-    }
-
-    .forecast-controls {
-      margin-top: 16px;
-      padding-top: 14px;
-      border-top: 1px solid var(--border-color);
-      display: flex;
-      gap: 8px;
-      align-items: center;
-    }
-
-    .forecast-btn {
-      background: var(--card-bg);
-      color: var(--text-color);
-      border: 1px solid var(--border-color);
-      padding: 5px 12px;
-      border-radius: 6px;
-      font-size: 0.8rem;
-      font-weight: 600;
-      cursor: pointer;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.02);
-    }
-
-    .forecast-btn.active {
-      background: var(--accent-color);
-      color: #0f172a;
-      border-color: var(--accent-color);
-    }
-
-    .forecast-container {
-      display: none;
-      margin-top: 14px;
-      gap: 10px;
-      overflow-x: auto;
-      padding-bottom: 4px;
-    }
-
-    .forecast-container.open {
-      display: flex;
-    }
-
-    .forecast-item {
-      background: var(--card-bg);
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-      padding: 10px 14px;
-      text-align: center;
-      min-width: 85px;
-      flex-shrink: 0;
-      font-size: 0.8rem;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.02);
-    }
-
-    .forecast-item .time {
-      font-weight: bold;
-      margin-bottom: 6px;
-      color: var(--text-muted);
-    }
-
-    .forecast-item .icon {
-      font-size: 1.4rem;
-      margin: 4px 0;
-    }
-
-    .legend-wrapper {
-      background: var(--card-bg);
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-      margin-bottom: 20px;
-      overflow: hidden;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.03);
-    }
-
-    .legend-toggle-btn {
-      background: transparent;
-      color: var(--text-color);
-      border: none;
-      padding: 12px 16px;
-      font-size: 0.85rem;
-      font-weight: 600;
-      cursor: pointer;
-      width: 100%;
-      text-align: left;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .legend-content {
-      display: none;
-      padding: 0 16px 16px 16px;
-      border-top: 1px solid var(--border-color);
-      font-size: 0.85rem;
-    }
-
-    .legend-content.open {
-      display: block;
-    }
-
-    .legend-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 8px;
-    }
-
-    .legend-table th, .legend-table td {
-      padding: 8px;
-      border-bottom: 1px solid var(--border-color);
-      text-align: left;
-      vertical-align: top;
-    }
-
-    .legend-table tr:last-child td {
-      border-bottom: none;
-    }
-
-    .legend-sub {
-      display: block;
-      font-size: 0.75rem;
-      color: var(--text-muted);
-      margin-top: 2px;
-    }
-
-    .legend-badge {
-      display: inline-block;
-      padding: 2px 6px;
-      border-radius: 4px;
-      color: #fff;
-      font-weight: bold;
-      font-size: 0.75rem;
-    }
-
-    .alert-card {
-      background-color: var(--card-bg);
-      border-radius: 8px;
-      padding: 20px;
-      margin-bottom: 16px;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-      border-top: 1px solid var(--border-color);
-      border-right: 1px solid var(--border-color);
-      border-bottom: 1px solid var(--border-color);
-    }
-
-    .level-D  { border-left: 6px solid #8b5cf6; }
-    .level-N1 { border-left: 6px solid #dc2626; }
-    .level-N2 { border-left: 6px solid #ea580c; }
-    .level-N3 { border-left: 6px solid #ca8a04; }
-    .level-A  { border-left: 6px solid #f97316; }
-    .level-I  { border-left: 6px solid #65a30d; }
-    .level-T  { border-left: 6px solid #475569; }
-
-    .meta {
-      font-size: 0.85rem;
-      color: var(--text-muted);
-      margin-bottom: 12px;
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      align-items: center;
-    }
-
-    .meta span {
-      background: var(--badge-bg);
-      padding: 3px 8px;
-      border-radius: 4px;
-      border: 1px solid var(--border-color);
-      color: var(--text-muted);
-    }
-
-    .level-tag {
-      font-weight: bold;
-      color: #fff !important;
-      border: none !important;
-    }
-    .tag-D  { background-color: #8b5cf6 !important; }
-    .tag-N1 { background-color: #dc2626 !important; }
-    .tag-N2 { background-color: #ea580c !important; }
-    .tag-N3 { background-color: #ca8a04 !important; }
-    .tag-A  { background-color: #f97316 !important; }
-    .tag-I  { background-color: #65a30d !important; }
-    .tag-T  { background-color: #475569 !important; }
-
-    .headline {
-      font-size: 1.2rem;
-      font-weight: 700;
-      margin-bottom: 12px;
-      color: var(--text-color);
-    }
-
-    .description {
-      font-size: 0.95rem;
-      line-height: 1.6;
-      color: var(--text-color);
-    }
-
-    .description img {
-      max-width: 200px;
-      height: auto;
-      border-radius: 6px;
-      margin: 12px 0;
-      display: block;
-    }
-
-    .description ul {
-      margin-left: 20px;
-      margin-top: 8px;
-      margin-bottom: 8px;
-    }
-
-    .description a {
-      color: var(--accent-color);
-      text-decoration: none;
-    }
-
-    .collapsible-section {
-      margin-top: 30px;
-      border-top: 2px dashed var(--border-color);
-      padding-top: 20px;
-    }
-
-    .accordion-btn {
-      width: 100%;
-      background-color: var(--card-bg);
-      color: var(--text-color);
-      border: 1px solid var(--border-color);
-      padding: 14px 18px;
-      border-radius: 8px;
-      font-size: 0.95rem;
-      font-weight: 600;
-      text-align: left;
-      cursor: pointer;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .accordion-content {
-      display: none;
-      margin-top: 14px;
-    }
-
-    .accordion-content.open {
-      display: block;
-    }
-
-    .loading, .error {
-      text-align: center;
-      padding: 40px;
-      background: var(--card-bg);
-      border-radius: 8px;
-      color: var(--text-muted);
-      border: 1px solid var(--border-color);
-    }
-
-    .error {
-      color: #f87171;
-    }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-thumb { background: rgba(156, 163, 175, 0.5); border-radius: 3px; }
   </style>
 </head>
-<body>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-100 min-h-screen flex flex-col font-sans transition-colors duration-200">
 
-  <header>
-    <div class="brand">
-      <div class="icon-box">
-        <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
-          <line x1="12" y1="9" x2="12" y2="13"></line>
-          <line x1="12" y1="17" x2="12.01" y2="17"></line>
-        </svg>
-      </div>
-      <div class="title-area">
-        <h1>LU-Alert Monitor</h1>
-        <div class="subtitle">
-          <a href="https://www.cisreisdorf.lu" target="_blank" rel="noopener">CIS Reisdorf</a> 
-          <span class="source-break">• Quelle: <a href="https://www.lu-alert.lu" target="_blank" rel="noopener">lu-alert.lu</a></span>
+  <!-- Header & Navigation exakt wie bei der Pegel-Seite -->
+  <header class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-30 shadow-sm">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        
+        <div class="flex items-center space-x-3">
+          <div onclick="triggerManualRefresh()" class="p-2 bg-blue-600 text-white rounded-lg shadow cursor-pointer hover:bg-blue-700 transition-colors" title="Seite aktualisieren">
+            <i data-lucide="triangle-alert" class="w-6 h-6"></i>
+          </div>
+          <div>
+            <h1 class="text-lg font-bold leading-none text-gray-900 dark:text-white">LU-Alert Monitor</h1>
+            <div class="text-xs text-gray-500 dark:text-gray-400 mt-1 flex flex-col sm:flex-row sm:items-center sm:space-x-1.5">
+              <a href="https://www.cisreisdorf.lu" target="_blank" rel="noopener noreferrer" class="hover:underline font-medium text-gray-700 dark:text-gray-300">CIS Reisdorf</a>
+              <span class="hidden sm:inline">&bull;</span>
+              <a href="https://www.lu-alert.lu" target="_blank" rel="noopener noreferrer" class="hover:underline">Quelle: lu-alert.lu</a>
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
-    <div class="header-right">
-      <div class="stand-box">
-        <span>Stand</span>
-        <span id="status">--:--</span>
-      </div>
-      <button class="refresh-btn" id="logo-refresh-btn" onclick="triggerManualRefresh()" title="Seite aktualisieren">
-        <svg viewBox="0 0 24 24"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
-      </button>
-      <div class="controls">
-        <select id="lang-select" class="lang-select" onchange="setLanguage(this.value)">
-          <option value="de" selected>DE</option>
-          <option value="fr">FR</option>
-          <option value="en">EN</option>
-        </select>
-        <button class="theme-btn" id="theme-toggle" onclick="toggleTheme()" title="Tag/Nacht Modus">
-          <svg id="theme-icon" viewBox="0 0 24 24">
-            <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
-          </svg>
-        </button>
+
+        <div class="flex items-center space-x-3">
+          <div class="flex flex-col text-right">
+            <span class="text-[10px] uppercase tracking-wider text-gray-400 font-semibold">Stand</span>
+            <span id="last-update-time" class="text-xs font-mono font-medium text-gray-700 dark:text-gray-300">--:--</span>
+          </div>
+
+          <button onclick="triggerManualRefresh()" title="Daten jetzt aktualisieren" class="p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
+            <span id="refresh-wrapper" class="inline-flex items-center justify-center">
+              <i data-lucide="refresh-cw" class="w-5 h-5"></i>
+            </span>
+          </button>
+
+          <select id="lang-select" onchange="setLanguage(this.value)" class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-1 text-xs font-semibold focus:outline-none">
+            <option value="de" selected>DE</option>
+            <option value="fr">FR</option>
+            <option value="en">EN</option>
+          </select>
+
+          <button id="theme-toggle" onclick="toggleTheme()" title="Design umschalten" class="p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
+            <i id="theme-icon-sun" data-lucide="sun" class="w-5 h-5 hidden"></i>
+            <i id="theme-icon-moon" data-lucide="moon" class="w-5 h-5"></i>
+          </button>
+        </div>
+
       </div>
     </div>
   </header>
 
-  <div class="weather-widget" id="weather-widget">
-    <div class="weather-top-row">
-      <div class="weather-main">
-        <div class="weather-icon-container">
-          <span class="weather-icon" id="w-icon">⏳</span>
-        </div>
-        <div class="weather-temp-area">
-          <div class="weather-temp-line">
-            <span class="weather-temp" id="w-temp">-- °C</span>
-            <span class="weather-status-text" id="w-status">Lade...</span>
+  <main class="flex-1 max-w-4xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
+
+    <!-- Modernes Wetter Widget -->
+    <div class="bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-850 border border-gray-200 dark:border-gray-700 rounded-xl p-5 shadow-sm">
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div class="flex items-center space-x-4">
+          <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-2.5 shadow-sm flex items-center justify-center">
+            <span id="w-icon" class="text-3xl leading-none">⏳</span>
           </div>
           <div>
-            <select id="location-select" class="weather-select" onchange="handleLocationChange()">
-              <option value="49.85,6.27" selected>Reisdorf</option>
-            </select>
+            <div class="flex items-baseline space-x-2">
+              <span id="w-temp" class="text-2xl font-extrabold text-gray-900 dark:text-white">-- °C</span>
+              <span id="w-status" class="text-sm font-semibold text-gray-500 dark:text-gray-400">Lade...</span>
+            </div>
+            <div class="mt-1">
+              <select id="location-select" onchange="handleLocationChange()" class="bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-gray-700 rounded-md px-2 py-1 text-xs font-semibold focus:outline-none">
+                <option value="49.85,6.27" selected>Reisdorf</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center space-x-4 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 px-4 py-2.5 rounded-lg text-xs shadow-sm">
+          <div>
+            <span id="w-wind-label" class="text-[10px] uppercase text-gray-400 font-semibold block">Wind</span>
+            <strong id="w-wind" class="text-gray-900 dark:text-white">-- km/h</strong>
+          </div>
+          <div class="border-l border-gray-200 dark:border-gray-700 pl-4">
+            <span id="w-hum-label" class="text-[10px] uppercase text-gray-400 font-semibold block">Feuchtigkeit</span>
+            <strong id="w-hum" class="text-gray-900 dark:text-white">--%</strong>
           </div>
         </div>
       </div>
-      <div class="weather-right">
-        <div>
-          <span id="w-wind-label" style="font-size:0.75rem;">Wind</span>
-          <strong id="w-wind">-- km/h</strong>
-        </div>
-        <div>
-          <span id="w-hum-label" style="font-size:0.75rem;">Feuchtigkeit</span>
-          <strong id="w-hum">--%</strong>
-        </div>
+
+      <div class="mt-4 pt-3 border-t border-gray-200 dark:border-gray-700 flex items-center space-x-2">
+        <span id="forecast-label" class="text-xs font-semibold text-gray-500 dark:text-gray-400">Prognose:</span>
+        <button id="btn-hourly" onclick="toggleForecast('hourly')" class="px-3 py-1 rounded-md text-xs font-semibold border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 hover:border-blue-500">Stunden</button>
+        <button id="btn-daily" onclick="toggleForecast('daily')" class="px-3 py-1 rounded-md text-xs font-semibold border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 hover:border-blue-500">Tage</button>
+      </div>
+
+      <div id="forecast-container" class="hidden mt-3 flex gap-2 overflow-x-auto pb-1"></div>
+    </div>
+
+    <!-- Nahtlos verbundene Legende -->
+    <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden shadow-sm">
+      <button onclick="toggleLegend()" class="w-full px-4 py-3 text-xs font-semibold text-gray-800 dark:text-gray-200 flex justify-between items-center bg-transparent hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
+        <span id="legend-btn-text">ℹ️ Warnstufen-Legende anzeigen</span>
+        <span id="legend-icon">▼</span>
+      </button>
+      <div id="legend-content" class="hidden px-4 pb-4 border-t border-gray-200 dark:border-gray-700 text-xs">
+        <table class="w-full border-collapse mt-2">
+          <thead>
+            <tr class="text-gray-400 uppercase text-[10px] border-b border-gray-200 dark:border-gray-700">
+              <th class="py-2 text-left">Stufe</th>
+              <th id="th-desc" class="py-2 text-left">Beschreibung</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100 dark:divide-gray-750">
+            <tr><td class="py-2"><span class="px-2 py-0.5 rounded bg-purple-600 text-white font-bold">D</span></td><td class="py-2"><strong id="leg-d-title"></strong><span id="leg-d-sub" class="block text-[11px] text-gray-400"></span></td></tr>
+            <tr><td class="py-2"><span id="badge-n1" class="px-2 py-0.5 rounded bg-red-600 text-white font-bold">N1</span></td><td class="py-2"><strong id="leg-n1-title"></strong><span id="leg-n1-sub" class="block text-[11px] text-gray-400"></span></td></tr>
+            <tr><td class="py-2"><span id="badge-n2" class="px-2 py-0.5 rounded bg-orange-600 text-white font-bold">N2</span></td><td class="py-2"><strong id="leg-n2-title"></strong><span id="leg-n2-sub" class="block text-[11px] text-gray-400"></span></td></tr>
+            <tr><td class="py-2"><span id="badge-n3" class="px-2 py-0.5 rounded bg-yellow-600 text-white font-bold">N3</span></td><td class="py-2"><strong id="leg-n3-title"></strong><span id="leg-n3-sub" class="block text-[11px] text-gray-400"></span></td></tr>
+            <tr><td class="py-2"><span class="px-2 py-0.5 rounded bg-orange-500 text-white font-bold">A</span></td><td class="py-2"><strong id="leg-a-title"></strong><span id="leg-a-sub" class="block text-[11px] text-gray-400"></span></td></tr>
+            <tr><td class="py-2"><span class="px-2 py-0.5 rounded bg-lime-600 text-white font-bold">I</span></td><td class="py-2"><strong id="leg-i-title"></strong><span id="leg-i-sub" class="block text-[11px] text-gray-400"></span></td></tr>
+            <tr><td class="py-2"><span class="px-2 py-0.5 rounded bg-gray-600 text-white font-bold">T</span></td><td class="py-2"><strong id="leg-t-title"></strong><span id="leg-t-sub" class="block text-[11px] text-gray-400"></span></td></tr>
+          </tbody>
+        </table>
       </div>
     </div>
 
-    <div class="forecast-controls">
-      <span style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted);" id="forecast-label">Prognose:</span>
-      <button class="forecast-btn" id="btn-hourly" onclick="toggleForecast('hourly')">Stunden</button>
-      <button class="forecast-btn" id="btn-daily" onclick="toggleForecast('daily')">Tage</button>
+    <!-- Primäre Notfallmeldungen -->
+    <main id="primary-alerts" class="space-y-4"></main>
+
+    <!-- Lebensmittelrückrufe Akkordeon -->
+    <div id="food-section" class="space-y-2" style="display: none;">
+      <button onclick="toggleAccordion()" class="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-4 py-3 rounded-xl text-xs font-semibold flex justify-between items-center shadow-sm">
+        <span id="food-accordion-label">🍎 Lebensmittel- & Produktrückrufe</span>
+        <span id="accordion-icon">▼</span>
+      </button>
+      <div id="food-alerts-container" class="hidden space-y-4 pt-2"></div>
     </div>
 
-    <div class="forecast-container" id="forecast-container"></div>
-  </div>
-
-  <div class="legend-wrapper">
-    <button class="legend-toggle-btn" onclick="toggleLegend()">
-      <span id="legend-btn-text">ℹ️ Warnstufen-Legende anzeigen</span>
-      <span id="legend-icon">▼</span>
-    </button>
-    <div class="legend-content" id="legend-content">
-      <table class="legend-table">
-        <thead>
-          <tr>
-            <th>Stufe</th>
-            <th id="th-desc">Beschreibung</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td><span class="legend-badge tag-D">D</span></td>
-            <td>
-              <strong id="leg-d-title"></strong>
-              <span class="legend-sub" id="leg-d-sub"></span>
-            </td>
-          </tr>
-          <tr>
-            <td><span class="legend-badge tag-N1" id="badge-n1">N1</span></td>
-            <td>
-              <strong id="leg-n1-title"></strong>
-              <span class="legend-sub" id="leg-n1-sub"></span>
-            </td>
-          </tr>
-          <tr>
-            <td><span class="legend-badge tag-N2" id="badge-n2">N2</span></td>
-            <td>
-              <strong id="leg-n2-title"></strong>
-              <span class="legend-sub" id="leg-n2-sub"></span>
-            </td>
-          </tr>
-          <tr>
-            <td><span class="legend-badge tag-N3" id="badge-n3">N3</span></td>
-            <td>
-              <strong id="leg-n3-title"></strong>
-              <span class="legend-sub" id="leg-n3-sub"></span>
-            </td>
-          </tr>
-          <tr>
-            <td><span class="legend-badge tag-A">A</span></td>
-            <td>
-              <strong id="leg-a-title"></strong>
-              <span class="legend-sub" id="leg-a-sub"></span>
-            </td>
-          </tr>
-          <tr>
-            <td><span class="legend-badge tag-I">I</span></td>
-            <td>
-              <strong id="leg-i-title"></strong>
-              <span class="legend-sub" id="leg-i-sub"></span>
-            </td>
-          </tr>
-          <tr>
-            <td><span class="legend-badge tag-T">T</span></td>
-            <td>
-              <strong id="leg-t-title"></strong>
-              <span class="legend-sub" id="leg-t-sub"></span>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-
-  <main id="primary-alerts"></main>
-
-  <div class="collapsible-section" id="food-section" style="display: none;">
-    <button class="accordion-btn" onclick="toggleAccordion()">
-      <span id="food-accordion-label">🍎 Lebensmittel- & Produktrückrufe</span>
-      <span id="accordion-icon">▼</span>
-    </button>
-    <div class="accordion-content" id="food-alerts-container"></div>
-  </div>
+  </main>
 
   <script>
     const WORKER_URL = "https://lu-alert-proxy.patrick95tuga.workers.dev/";
     let currentLang = "de";
     let rawXmlData = null;
-
-    const COMMUNE_DATA = {
-      "Reisdorf": { lat: 49.85, lon: 6.27 },
-      "Beaufort": { lat: 49.83, lon: 6.29 },
-      "Bettendorf": { lat: 49.87, lon: 6.21 },
-      "Bourscheid": { lat: 49.91, lon: 6.06 },
-      "Diekirch": { lat: 49.86, lon: 6.15 },
-      "Erpeldange-sur-Sûre": { lat: 49.87, lon: 6.11 },
-      "Ettelbruck": { lat: 49.84, lon: 6.09 },
-      "Feulen": { lat: 49.87, lon: 6.01 },
-      "Mertzig": { lat: 49.84, lon: 6.02 },
-      "Schieren": { lat: 49.82, lon: 6.11 },
-      "Echternach": { lat: 49.80, lon: 6.34 },
-      "Berdorf": { lat: 49.81, lon: 6.34 },
-      "Consdorf": { lat: 49.78, lon: 6.32 },
-      "Rosport-Mompach": { lat: 49.80, lon: 6.49 },
-      "Waldbillig": { lat: 49.78, lon: 6.27 },
-      "Luxembourg": { lat: 49.61, lon: 6.13 },
-      "Bertrange": { lat: 49.60, lon: 6.06 },
-      "Contern": { lat: 49.57, lon: 6.21 },
-      "Hesperange": { lat: 49.57, lon: 6.15 },
-      "Niederanven": { lat: 49.65, lon: 6.26 },
-      "Sandweiler": { lat: 49.59, lon: 6.21 },
-      "Schifflange": { lat: 49.50, lon: 6.01 },
-      "Schuttrange": { lat: 49.61, lon: 6.25 },
-      "Steinsel": { lat: 49.67, lon: 6.13 },
-      "Strassen": { lat: 49.62, lon: 6.07 },
-      "Walferdange": { lat: 49.65, lon: 6.13 },
-      "Weiler-la-Tour": { lat: 49.54, lon: 6.20 },
-      "Esch-sur-Alzette": { lat: 49.50, lon: 5.98 },
-      "Differdange": { lat: 49.52, lon: 5.89 },
-      "Dudelange": { lat: 49.48, lon: 6.08 },
-      "Kayl": { lat: 49.48, lon: 6.03 },
-      "Mondercange": { lat: 49.53, lon: 6.04 },
-      "Pétange": { lat: 49.55, lon: 5.88 },
-      "Reckange-sur-Mess": { lat: 49.55, lon: 6.05 },
-      "Roeser": { lat: 49.53, lon: 6.14 },
-      "Rumelange": { lat: 49.55, lon: 6.03 },
-      "Sanem": { lat: 49.55, lon: 5.91 },
-      "Wiltz": { lat: 49.96, lon: 5.93 },
-      "Boulaide": { lat: 49.89, lon: 5.84 },
-      "Esch-sur-Sûre": { lat: 49.91, lon: 5.93 },
-      "Goesdorf": { lat: 49.93, lon: 5.99 },
-      "Kiischpelt": { lat: 50.00, lon: 6.01 },
-      "Clervaux": { lat: 50.05, lon: 6.02 },
-      "Parc Hosingen": { lat: 50.03, lon: 6.12 },
-      "Troisvierges": { lat: 50.12, lon: 5.98 },
-      "Weiswampach": { lat: 50.13, lon: 6.07 },
-      "Wincrange": { lat: 50.06, lon: 5.91 },
-      "Grevenmacher": { lat: 49.71, lon: 6.33 },
-      "Betzdorf": { lat: 49.68, lon: 6.33 },
-      "Biwer": { lat: 49.68, lon: 6.38 },
-      "Flaxweiler": { lat: 49.66, lon: 6.33 },
-      "Junglinster": { lat: 49.70, lon: 6.25 },
-      "Manternach": { lat: 49.70, lon: 6.42 },
-      "Mertert": { lat: 49.70, lon: 6.47 },
-      "Wormeldange": { lat: 49.63, lon: 6.40 },
-      "Remich": { lat: 49.54, lon: 6.36 },
-      "Bous": { lat: 49.56, lon: 6.34 },
-      "Dalheim": { lat: 49.53, lon: 6.27 },
-      "Lenningen": { lat: 49.61, lon: 6.35 },
-      "Mondorf-les-Bains": { lat: 49.50, lon: 6.28 },
-      "Stadtbredimus": { lat: 49.57, lon: 6.36 },
-      "Mersch": { lat: 49.74, lon: 6.10 },
-      "Bissen": { lat: 49.77, lon: 6.08 },
-      "Colmar-Berg": { lat: 49.81, lon: 6.09 },
-      "Fischbach": { lat: 49.75, lon: 6.21 },
-      "Heffingen": { lat: 49.78, lon: 6.25 },
-      "Larochette": { lat: 49.78, lon: 6.22 },
-      "Lintgen": { lat: 49.73, lon: 6.13 },
-      "Lorentzweiler": { lat: 49.69, lon: 6.13 },
-      "Nommern": { lat: 49.79, lon: 6.20 },
-      "Redange": { lat: 49.76, lon: 5.89 },
-      "Beckerich": { lat: 49.73, lon: 5.89 },
-      "Preizerdaul": { lat: 49.78, lon: 5.91 },
-      "Saeul": { lat: 49.73, lon: 6.03 },
-      "Useldange": { lat: 49.75, lon: 5.93 },
-      "Vichten": { lat: 49.79, lon: 5.94 },
-      "Capellen": { lat: 49.64, lon: 5.96 },
-      "Garnich": { lat: 49.61, lon: 5.96 },
-      "Hobscheid": { lat: 49.68, lon: 5.91 },
-      "Käerjeng": { lat: 49.56, lon: 5.91 },
-      "Koerich": { lat: 49.65, lon: 5.94 },
-      "Kopstal": { lat: 49.67, lon: 6.08 },
-      "Mamer": { lat: 49.63, lon: 6.02 },
-      "Steinfort": { lat: 49.65, lon: 5.91 },
-      "Vianden": { lat: 49.93, lon: 6.20 },
-      "Putscheid": { lat: 49.96, lon: 6.18 },
-      "Tandel": { lat: 49.89, lon: 6.20 }
-    };
-
     let currentLat = 49.85;
     let currentLon = 6.27;
     let activeForecastMode = null;
     let cachedWeatherData = null;
 
-    function initCommuneSelect() {
-      const select = document.getElementById("location-select");
-      select.innerHTML = "";
-      Object.keys(COMMUNE_DATA).sort().forEach(commune => {
-        const option = document.createElement("option");
-        option.value = commune;
-        option.textContent = commune;
-        if (commune === "Reisdorf") option.selected = true;
-        select.appendChild(option);
-      });
-    }
+    const COMMUNE_DATA = {
+      "Reisdorf": { lat: 49.85, lon: 6.27 },
+      "Diekirch": { lat: 49.86, lon: 6.15 },
+      "Ettelbruck": { lat: 49.84, lon: 6.09 },
+      "Luxembourg": { lat: 49.61, lon: 6.13 },
+      "Echternach": { lat: 49.80, lon: 6.34 }
+    };
+
+    document.addEventListener('DOMContentLoaded', () => {
+      initTheme();
+      lucide.createIcons();
+      updateTexts();
+      loadWeather(currentLat, currentLon);
+      loadAlerts();
+    });
 
     function initTheme() {
-      const currentHour = new Date().getHours();
-      const isNight = currentHour >= 22 || currentHour < 6;
-      const iconSvg = document.getElementById("theme-icon");
-
-      if (isNight) {
-        document.body.classList.add("dark-mode");
-        iconSvg.innerHTML = '<circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>';
+      const savedTheme = localStorage.getItem('theme');
+      let isDark = false;
+      if (savedTheme) {
+        isDark = (savedTheme === 'dark');
       } else {
-        document.body.classList.remove("dark-mode");
-        iconSvg.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+        const currentHour = new Date().getHours();
+        isDark = (currentHour >= 22 || currentHour < 6);
+      }
+      applyTheme(isDark);
+    }
+
+    function applyTheme(isDark) {
+      if (isDark) {
+        document.documentElement.classList.add('dark');
+        document.documentElement.classList.remove('light');
+        document.getElementById('theme-icon-sun').classList.remove('hidden');
+        document.getElementById('theme-icon-moon').classList.add('hidden');
+      } else {
+        document.documentElement.classList.remove('dark');
+        document.documentElement.classList.add('light');
+        document.getElementById('theme-icon-sun').classList.add('hidden');
+        document.getElementById('theme-icon-moon').classList.remove('hidden');
       }
     }
 
     function toggleTheme() {
-      document.body.classList.toggle("dark-mode");
-      const isDark = document.body.classList.contains("dark-mode");
-      const iconSvg = document.getElementById("theme-icon");
-      
-      if (isDark) {
-        iconSvg.innerHTML = '<circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>';
-      } else {
-        iconSvg.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
-      }
+      const isDark = !document.documentElement.classList.contains('dark');
+      localStorage.setItem('theme', isDark ? 'dark' : 'light');
+      applyTheme(isDark);
     }
 
     async function triggerManualRefresh() {
-      const btn = document.getElementById("logo-refresh-btn");
-      btn.classList.add("refreshing");
+      const refreshWrapper = document.getElementById('refresh-wrapper');
+      if (refreshWrapper) refreshWrapper.classList.add('animate-spin');
       
       await Promise.all([loadAlerts(), loadWeather(currentLat, currentLon)]);
       
       setTimeout(() => {
-        btn.classList.remove("refreshing");
+        if (refreshWrapper) refreshWrapper.classList.remove('animate-spin');
       }, 500);
     }
 
@@ -858,8 +226,8 @@
       const content = document.getElementById("legend-content");
       const icon = document.getElementById("legend-icon");
       const btnText = document.getElementById("legend-btn-text");
-      content.classList.toggle("open");
-      const isOpen = content.classList.contains("open");
+      content.classList.toggle("hidden");
+      const isOpen = !content.classList.contains("hidden");
       icon.textContent = isOpen ? "▲" : "▼";
       
       if (currentLang === 'de') {
@@ -874,8 +242,8 @@
     function toggleAccordion() {
       const content = document.getElementById("food-alerts-container");
       const icon = document.getElementById("accordion-icon");
-      content.classList.toggle("open");
-      icon.textContent = content.classList.contains("open") ? "▲" : "▼";
+      content.classList.toggle("hidden");
+      icon.textContent = content.classList.contains("hidden") ? "▼" : "▲";
     }
 
     function setLanguage(lang) {
@@ -883,87 +251,81 @@
       document.getElementById("lang-select").value = lang;
       updateTexts();
       loadWeather(currentLat, currentLon);
-      if (rawXmlData) {
-        renderAlerts(rawXmlData);
-      }
+      if (rawXmlData) renderAlerts(rawXmlData);
     }
 
     function updateTexts() {
       const btnText = document.getElementById("legend-btn-text");
-      const isOpen = document.getElementById("legend-content").classList.contains("open");
+      const isClosed = document.getElementById("legend-content").classList.contains("hidden");
       
       const prefix = currentLang === 'de' ? 'S' : currentLang === 'en' ? 'L' : 'N';
       document.getElementById("badge-n1").textContent = prefix + '1';
       document.getElementById("badge-n2").textContent = prefix + '2';
       document.getElementById("badge-n3").textContent = prefix + '3';
 
-      document.getElementById("th-desc").textContent = currentLang === 'de' ? 'Beschreibung' : currentLang === 'fr' ? 'Description' : 'Description';
+      document.getElementById("th-desc").textContent = currentLang === 'de' ? 'Beschreibung' : 'Description';
       document.getElementById("w-hum-label").textContent = currentLang === 'de' ? 'Feuchtigkeit' : currentLang === 'fr' ? 'Humidité' : 'Humidity';
       document.getElementById("forecast-label").textContent = currentLang === 'de' ? 'Prognose:' : currentLang === 'fr' ? 'Prévision :' : 'Forecast :';
       document.getElementById("btn-hourly").textContent = currentLang === 'de' ? 'Stunden' : currentLang === 'fr' ? 'Heures' : 'Hourly';
       document.getElementById("btn-daily").textContent = currentLang === 'de' ? 'Tage' : currentLang === 'fr' ? 'Jours' : 'Daily';
 
       if (currentLang === 'de') {
-        btnText.textContent = isOpen ? "ℹ️ Warnstufen-Legende ausblenden" : "ℹ️ Warnstufen-Legende anzeigen";
+        btnText.textContent = isClosed ? "ℹ️ Warnstufen-Legende anzeigen" : "ℹ️ Warnstufen-Legende ausblenden";
         document.getElementById("leg-d-title").textContent = "Akute Gefahr / Sofortiges Handeln";
         document.getElementById("leg-d-sub").textContent = "Warnung die sofortiges Handeln erfordert";
-        document.getElementById("leg-n1-title").textContent = "Wachsamkeitsstufe rot / Äußerste Vorsicht (hohes Risiko / große Gefahr)";
+        document.getElementById("leg-n1-title").textContent = "Wachsamkeitsstufe rot / Äußerste Vorsicht";
         document.getElementById("leg-n1-sub").textContent = "Die höchste Warnstufe";
-        document.getElementById("leg-n2-title").textContent = "Wachsamkeitsstufe orange / Seien Sie vorsichtig (mittleres Risiko / Gefahr)";
+        document.getElementById("leg-n2-title").textContent = "Wachsamkeitsstufe orange / Seien Sie vorsichtig";
         document.getElementById("leg-n2-sub").textContent = "Die mittlere Warnstufe";
-        document.getElementById("leg-n3-title").textContent = "Wachsamkeitsstufe gelb / Seien Sie aufmerksam (geringes Risiko / potentielle Gefahr)";
+        document.getElementById("leg-n3-title").textContent = "Wachsamkeitsstufe gelb / Seien Sie aufmerksam";
         document.getElementById("leg-n3-sub").textContent = "Die niedrigste Warnstufe";
         document.getElementById("leg-a-title").textContent = "Vermissten- / Entführungsmeldung";
         document.getElementById("leg-a-sub").textContent = "Warnung bei Vermissten- / Entführungssituationen";
-        document.getElementById("leg-i-title").textContent = "Information (kein Risiko / keine Gefahr)";
+        document.getElementById("leg-i-title").textContent = "Information (kein Risiko)";
         document.getElementById("leg-i-sub").textContent = "Für Informationsmeldungen";
-        document.getElementById("leg-t-title").textContent = "Test (kein Risiko / keine Gefahr)";
+        document.getElementById("leg-t-title").textContent = "Test (kein Risiko)";
         document.getElementById("leg-t-sub").textContent = "Für Test- und Übungszwecke";
-
       } else if (currentLang === 'fr') {
-        btnText.textContent = isOpen ? "ℹ️ Masquer la légende des alertes" : "ℹ️ Afficher la légende des alertes";
+        btnText.textContent = isClosed ? "ℹ️ Afficher la légende des alertes" : "ℹ️ Masquer la légende des alertes";
         document.getElementById("leg-d-title").textContent = "Danger imminent / Action immédiate";
         document.getElementById("leg-d-sub").textContent = "Alerte nécessitant une action immédiate";
-        document.getElementById("leg-n1-title").textContent = "Niveau de vigilance rouge / Vigilance absolue (risque élevé / danger important)";
+        document.getElementById("leg-n1-title").textContent = "Niveau de vigilance rouge";
         document.getElementById("leg-n1-sub").textContent = "Le niveau d’alerte le plus élevé";
-        document.getElementById("leg-n2-title").textContent = "Niveau de vigilance orange / Soyez prudents (risque moyen / danger)";
+        document.getElementById("leg-n2-title").textContent = "Niveau de vigilance orange";
         document.getElementById("leg-n2-sub").textContent = "Le niveau d’alerte moyen";
-        document.getElementById("leg-n3-title").textContent = "Niveau de vigilance jaune / Soyez attentifs (faible risque / danger potentiel)";
+        document.getElementById("leg-n3-title").textContent = "Niveau de vigilance jaune";
         document.getElementById("leg-n3-sub").textContent = "Le niveau d’alerte le plus bas";
         document.getElementById("leg-a-title").textContent = "Disparition / enlèvement";
-        document.getElementById("leg-a-sub").textContent = "Utilisé pour des alertes de disparition / d'enlèvement";
-        document.getElementById("leg-i-title").textContent = "Information (pas de risque / pas de danger)";
+        document.getElementById("leg-a-sub").textContent = "Utilisé pour des alertes de disparition";
+        document.getElementById("leg-i-title").textContent = "Information";
         document.getElementById("leg-i-sub").textContent = "Utilisé pour des messages d’information";
-        document.getElementById("leg-t-title").textContent = "Test (pas de risque / pas de danger)";
-        document.getElementById("leg-t-sub").textContent = "Utilisé pour des messages de test et d'exercice";
-
+        document.getElementById("leg-t-title").textContent = "Test";
+        document.getElementById("leg-t-sub").textContent = "Utilisé pour des messages de test";
       } else {
-        btnText.textContent = isOpen ? "ℹ️ Hide alert legend" : "ℹ️ Show alert legend";
+        btnText.textContent = isClosed ? "ℹ️ Show alert legend" : "ℹ️ Hide alert legend";
         document.getElementById("leg-d-title").textContent = "Imminent danger / Immediate action";
         document.getElementById("leg-d-sub").textContent = "Alert requiring immediate action";
-        document.getElementById("leg-n1-title").textContent = "Awareness level red / Utmost vigilance (high risk / significant danger)";
+        document.getElementById("leg-n1-title").textContent = "Awareness level red";
         document.getElementById("leg-n1-sub").textContent = "The highest alert level";
-        document.getElementById("leg-n2-title").textContent = "Awareness level orange / Be careful (medium risk / danger)";
+        document.getElementById("leg-n2-title").textContent = "Awareness level orange";
         document.getElementById("leg-n2-sub").textContent = "The medium alert level";
-        document.getElementById("leg-n3-title").textContent = "Awareness level yellow / Be aware (low risk / potential danger)";
+        document.getElementById("leg-n3-title").textContent = "Awareness level yellow";
         document.getElementById("leg-n3-sub").textContent = "The lowest alert level";
-        document.getElementById("leg-a-title").textContent = "Missing person / kidnapping alert";
-        document.getElementById("leg-a-sub").textContent = "Used for missing person / kidnapping alerts";
-        document.getElementById("leg-i-title").textContent = "Information (no risk / no danger)";
+        document.getElementById("leg-a-title").textContent = "Missing person / kidnapping";
+        document.getElementById("leg-a-sub").textContent = "Used for missing person alerts";
+        document.getElementById("leg-i-title").textContent = "Information";
         document.getElementById("leg-i-sub").textContent = "Used for information messages";
-        document.getElementById("leg-t-title").textContent = "Test (no risk / no danger)";
-        document.getElementById("leg-t-sub").textContent = "Used for test and exercice messages";
+        document.getElementById("leg-t-title").textContent = "Test";
+        document.getElementById("leg-t-sub").textContent = "Used for test messages";
       }
     }
 
     function handleLocationChange() {
       const select = document.getElementById("location-select");
-      const name = select.value;
-      if (COMMUNE_DATA[name]) {
-        currentLat = COMMUNE_DATA[name].lat;
-        currentLon = COMMUNE_DATA[name].lon;
-        loadWeather(currentLat, currentLon);
-      }
+      const [lat, lon] = select.value.split(',');
+      currentLat = parseFloat(lat);
+      currentLon = parseFloat(lon);
+      loadWeather(currentLat, currentLon);
     }
 
     function getWeatherDetails(code) {
@@ -986,17 +348,13 @@
         document.getElementById("w-temp").textContent = current.temperature_2m + " °C";
         document.getElementById("w-wind").textContent = current.wind_speed_10m + " km/h";
         document.getElementById("w-hum").textContent = current.relative_humidity_2m + "%";
-
         document.getElementById("w-wind-label").textContent = currentLang === 'de' ? 'Wind' : currentLang === 'fr' ? 'Vent' : 'Wind';
 
         const details = getWeatherDetails(current.weather_code);
         document.getElementById("w-status").textContent = details.desc;
         document.getElementById("w-icon").textContent = details.icon;
 
-        if (activeForecastMode) {
-          renderForecast();
-        }
-
+        if (activeForecastMode) renderForecast();
       } catch (e) {
         document.getElementById("w-status").textContent = "Nicht verfügbar";
       }
@@ -1009,14 +367,14 @@
 
       if (activeForecastMode === mode) {
         activeForecastMode = null;
-        container.classList.remove("open");
-        btnHourly.classList.remove("active");
-        btnDaily.classList.remove("active");
+        container.classList.add("hidden");
+        btnHourly.classList.remove("border-blue-500", "text-blue-600");
+        btnDaily.classList.remove("border-blue-500", "text-blue-600");
       } else {
         activeForecastMode = mode;
-        container.classList.add("open");
-        btnHourly.classList.toggle("active", mode === 'hourly');
-        btnDaily.classList.toggle("active", mode === 'daily');
+        container.classList.remove("hidden");
+        btnHourly.classList.toggle("border-blue-500", mode === 'hourly');
+        btnDaily.classList.toggle("border-blue-500", mode === 'daily');
         renderForecast();
       }
     }
@@ -1037,10 +395,10 @@
           const details = getWeatherDetails(hourly.weather_code[i]);
 
           container.innerHTML += `
-            <div class="forecast-item">
-              <div class="time">${timeStr}</div>
-              <div class="icon">${details.icon}</div>
-              <div><strong>${temp}°C</strong></div>
+            <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-2 text-center min-w-[75px] shrink-0 text-xs">
+              <div class="font-bold text-gray-400">${timeStr}</div>
+              <div class="text-lg my-1">${details.icon}</div>
+              <div class="font-bold text-gray-900 dark:text-white">${temp}°C</div>
             </div>
           `;
         }
@@ -1056,10 +414,10 @@
           const details = getWeatherDetails(daily.weather_code[i]);
 
           container.innerHTML += `
-            <div class="forecast-item">
-              <div class="time">${dayName}</div>
-              <div class="icon">${details.icon}</div>
-              <div><strong>${maxTemp}°</strong> / ${minTemp}°</div>
+            <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-2 text-center min-w-[75px] shrink-0 text-xs">
+              <div class="font-bold text-gray-400">${dayName}</div>
+              <div class="text-lg my-1">${details.icon}</div>
+              <div class="font-bold text-gray-900 dark:text-white">${maxTemp}° / ${minTemp}°</div>
             </div>
           `;
         }
@@ -1068,7 +426,7 @@
 
     async function loadAlerts() {
       const primaryContainer = document.getElementById('primary-alerts');
-      const statusBadge = document.getElementById('status');
+      const timeBadge = document.getElementById('last-update-time');
 
       try {
         const response = await fetch(WORKER_URL);
@@ -1081,12 +439,10 @@
         renderAlerts(rawXmlData);
         
         const now = new Date();
-        const timeStr = now.toLocaleTimeString("de-DE", { hour: '2-digit', minute: '2-digit' });
-        statusBadge.textContent = timeStr;
-
+        timeBadge.textContent = now.toLocaleTimeString("de-DE", { hour: '2-digit', minute: '2-digit', hour12: false });
       } catch (err) {
-        primaryContainer.innerHTML = `<div class="error">Fehler beim Laden der Daten: ${err.message}</div>`;
-        statusBadge.textContent = "ERR";
+        primaryContainer.innerHTML = `<div class="p-4 bg-white dark:bg-gray-800 rounded-xl text-red-500 text-xs">Fehler beim Laden der Daten: ${err.message}</div>`;
+        timeBadge.textContent = "ERR";
       }
     }
 
@@ -1101,7 +457,7 @@
       const infos = xmlDoc.getElementsByTagName("info");
 
       if (infos.length === 0) {
-        primaryContainer.innerHTML = "<div class='loading'>Aktuell liegen keine aktiven Warnungen vor.</div>";
+        primaryContainer.innerHTML = "<div class='p-4 bg-white dark:bg-gray-800 rounded-xl text-gray-500 text-xs'>Aktuell liegen keine aktiven Warnungen vor.</div>";
         foodSection.style.display = "none";
         return;
       }
@@ -1109,16 +465,11 @@
       let primaryCardsHtml = "";
       let foodCardsHtml = "";
       let foodCount = 0;
-
       let localeSetting = currentLang === 'de' ? 'de-DE' : currentLang === 'fr' ? 'fr-FR' : 'en-US';
 
-      // Schleife durch ALLE Meldungen im Feed
       for (let info of infos) {
         const lang = info.getElementsByTagName("language")[0]?.textContent || "";
-        
-        if (!lang.toLowerCase().startsWith(currentLang)) {
-          continue;
-        }
+        if (!lang.toLowerCase().startsWith(currentLang)) continue;
 
         const category = info.getElementsByTagName("category")[0]?.textContent || "";
         let isFoodRecall = category.toLowerCase() === "health";
@@ -1157,18 +508,12 @@
 
         let effectiveStr = effective;
         try {
-          effectiveStr = new Date(effective).toLocaleString(localeSetting, {
-            day: '2-digit', month: '2-digit', year: 'numeric',
-            hour: '2-digit', minute: '2-digit'
-          });
+          effectiveStr = new Date(effective).toLocaleString(localeSetting, { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
         } catch(e) {}
 
         let expiresStr = expires;
         try {
-          expiresStr = new Date(expires).toLocaleString(localeSetting, {
-            day: '2-digit', month: '2-digit', year: 'numeric',
-            hour: '2-digit', minute: '2-digit'
-          });
+          expiresStr = new Date(expires).toLocaleString(localeSetting, { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
         } catch(e) {}
 
         const labelValid = currentLang === 'de' ? 'Gültig' : currentLang === 'fr' ? 'Valable' : 'Valid';
@@ -1176,15 +521,24 @@
         const labelSource = currentLang === 'de' ? 'Quelle' : currentLang === 'fr' ? 'Source' : 'Source';
         const levelLabel = currentLang === 'de' ? 'Stufe' : currentLang === 'fr' ? 'Niveau' : 'Level';
 
+        let borderColor = 'border-l-yellow-600';
+        let badgeColor = 'bg-yellow-600';
+        if (levelCodeRaw === 'N1') { borderColor = 'border-l-red-600'; badgeColor = 'bg-red-600'; }
+        else if (levelCodeRaw === 'N2') { borderColor = 'border-l-orange-600'; badgeColor = 'bg-orange-600'; }
+        else if (levelCodeRaw === 'D') { borderColor = 'border-l-purple-600'; badgeColor = 'bg-purple-600'; }
+        else if (levelCodeRaw === 'A') { borderColor = 'border-l-orange-500'; badgeColor = 'bg-orange-500'; }
+        else if (levelCodeRaw === 'I') { borderColor = 'border-l-lime-600'; badgeColor = 'bg-lime-600'; }
+        else if (levelCodeRaw === 'T') { borderColor = 'border-l-gray-600'; badgeColor = 'bg-gray-600'; }
+
         const cardHtml = `
-          <article class="alert-card level-${levelCodeRaw}">
-            <div class="meta">
-              <span class="level-tag tag-${levelCodeRaw}">${levelLabel}: ${displayLevel}</span>
-              <span>${labelValid}: ${effectiveStr} — ${labelUntil} ${expiresStr}</span>
-              <span>${labelSource}: ${sender}</span>
+          <article class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5 shadow-sm border-l-4 ${borderColor} space-y-3">
+            <div class="flex flex-wrap items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+              <span class="px-2 py-0.5 rounded font-bold text-white ${badgeColor}">${levelLabel}: ${displayLevel}</span>
+              <span class="bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded">${labelValid}: ${effectiveStr} — ${labelUntil} ${expiresStr}</span>
+              <span class="bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded">${labelSource}: ${sender}</span>
             </div>
-            <div class="headline">${headline}</div>
-            <div class="description">${description}</div>
+            <div class="text-base font-bold text-gray-900 dark:text-white">${headline}</div>
+            <div class="text-sm text-gray-700 dark:text-gray-300 leading-relaxed space-y-2">${description}</div>
           </article>
         `;
 
@@ -1201,7 +555,7 @@
       if (primaryCardsHtml !== "") {
         primaryContainer.innerHTML = primaryCardsHtml;
       } else {
-        primaryContainer.innerHTML = `<div class="loading">${noEmergencyText}</div>`;
+        primaryContainer.innerHTML = `<div class="p-4 bg-white dark:bg-gray-800 rounded-xl text-gray-500 text-xs">${noEmergencyText}</div>`;
       }
 
       if (foodCount > 0) {
@@ -1217,20 +571,9 @@
       } else {
         foodSection.style.display = "none";
       }
+      
+      lucide.createIcons();
     }
-
-    // Initialisierung
-    initCommuneSelect();
-    initTheme();
-    updateTexts();
-    loadWeather(currentLat, currentLon);
-    loadAlerts();
-    
-    // Automatisches Aktualisieren alle 2 Minuten
-    setInterval(() => {
-      loadAlerts();
-      loadWeather(currentLat, currentLon);
-    }, 120000);
   </script>
 </body>
 </html>
