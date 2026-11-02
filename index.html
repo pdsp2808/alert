@@ -59,7 +59,6 @@
       gap: 12px;
     }
 
-    /* Kasten für das Warnsymbol exakt wie bei der Pegel-Seite */
     .icon-box {
       background: #3b82f6;
       border-radius: 8px;
@@ -105,7 +104,6 @@
       text-decoration: underline;
     }
 
-    /* Auf kleineren Bildschirmen Quelle in neue Zeile */
     @media (max-width: 550px) {
       .source-break {
         display: block;
@@ -191,7 +189,6 @@
       border-color: var(--accent-color);
     }
 
-    /* Modernes Wetter-Widget */
     .weather-widget {
       background: linear-gradient(135deg, var(--card-bg) 0%, var(--badge-bg) 100%);
       border: 1px solid var(--border-color);
@@ -354,7 +351,6 @@
       margin: 4px 0;
     }
 
-    /* Nahtlos verbundene Legende */
     .legend-wrapper {
       background: var(--card-bg);
       border: 1px solid var(--border-color);
@@ -505,23 +501,6 @@
       text-decoration: none;
     }
 
-    .alert-footer {
-      margin-top: 16px;
-      padding-top: 12px;
-      border-top: 1px solid var(--border-color);
-      font-size: 0.85rem;
-    }
-
-    .alert-footer a {
-      color: var(--accent-color);
-      text-decoration: none;
-      font-weight: 600;
-    }
-
-    .alert-footer a:hover {
-      text-decoration: underline;
-    }
-
     .collapsible-section {
       margin-top: 30px;
       border-top: 2px dashed var(--border-color);
@@ -609,7 +588,6 @@
     </div>
   </header>
 
-  <!-- Modernes Wetter Widget -->
   <div class="weather-widget" id="weather-widget">
     <div class="weather-top-row">
       <div class="weather-main">
@@ -649,7 +627,6 @@
     <div class="forecast-container" id="forecast-container"></div>
   </div>
 
-  <!-- Nahtlos verbundene Legende -->
   <div class="legend-wrapper">
     <button class="legend-toggle-btn" onclick="toggleLegend()">
       <span id="legend-btn-text">ℹ️ Warnstufen-Legende anzeigen</span>
@@ -1103,7 +1080,6 @@
         rawXmlData = data.raw_xml;
         renderAlerts(rawXmlData);
         
-        // Exakt hh:mm Format wie auf der Pegel-Seite
         const now = new Date();
         const timeStr = now.toLocaleTimeString("de-DE", { hour: '2-digit', minute: '2-digit' });
         statusBadge.textContent = timeStr;
@@ -1130,100 +1106,116 @@
         return;
       }
 
-      let targetInfo = null;
-      for (let info of infos) {
-        const lang = info.getElementsByTagName("language")[0]?.textContent || "";
-        if (lang.toLowerCase().startsWith(currentLang)) {
-          targetInfo = info;
-          break;
-        }
-      }
-      if (!targetInfo) targetInfo = infos[0];
-
-      const category = targetInfo.getElementsByTagName("category")[0]?.textContent || "";
-      let isFoodRecall = category.toLowerCase() === "health";
-      
-      const eventCodes = targetInfo.getElementsByTagName("eventCode");
-      for (let code of eventCodes) {
-        if (code.getElementsByTagName("value")[0]?.textContent === "FOOD_RECALL") {
-          isFoodRecall = true;
-          break;
-        }
-      }
-
-      let levelCodeRaw = "N3";
-      const parameters = targetInfo.getElementsByTagName("parameter");
-      for (let param of parameters) {
-        const valName = param.getElementsByTagName("valueName")[0]?.textContent || "";
-        const val = param.getElementsByTagName("value")[0]?.textContent || "";
-        if (valName.includes("cb-eu-level")) {
-          if (val === "ALERT_LVL_1") levelCodeRaw = "N1";
-          else if (val === "ALERT_LVL_2") levelCodeRaw = "N2";
-          else if (val === "ALERT_LVL_3") levelCodeRaw = "N3";
-        }
-      }
-
-      let displayLevel = levelCodeRaw;
-      if (levelCodeRaw.startsWith("N")) {
-        if (currentLang === 'de') displayLevel = levelCodeRaw.replace("N", "S");
-        if (currentLang === 'en') displayLevel = levelCodeRaw.replace("N", "L");
-      }
-
-      const headline = targetInfo.getElementsByTagName("headline")[0]?.textContent || "Warnmeldung";
-      const description = targetInfo.getElementsByTagName("description")[0]?.textContent || "";
-      const effective = targetInfo.getElementsByTagName("effective")[0]?.textContent || "";
-      const expires = targetInfo.getElementsByTagName("expires")[0]?.textContent || "";
-      const sender = xmlDoc.getElementsByTagName("sender")[0]?.textContent || "LU-Alert";
+      let primaryCardsHtml = "";
+      let foodCardsHtml = "";
+      let foodCount = 0;
 
       let localeSetting = currentLang === 'de' ? 'de-DE' : currentLang === 'fr' ? 'fr-FR' : 'en-US';
-      
-      let effectiveStr = effective;
-      try {
-        effectiveStr = new Date(effective).toLocaleString(localeSetting, {
-          day: '2-digit', month: '2-digit', year: 'numeric',
-          hour: '2-digit', minute: '2-digit'
-        });
-      } catch(e) {}
 
-      let expiresStr = expires;
-      try {
-        expiresStr = new Date(expires).toLocaleString(localeSetting, {
-          day: '2-digit', month: '2-digit', year: 'numeric',
-          hour: '2-digit', minute: '2-digit'
-        });
-      } catch(e) {}
+      // Schleife durch ALLE Meldungen im Feed
+      for (let info of infos) {
+        const lang = info.getElementsByTagName("language")[0]?.textContent || "";
+        
+        if (!lang.toLowerCase().startsWith(currentLang)) {
+          continue;
+        }
 
-      const labelValid = currentLang === 'de' ? 'Gültig' : currentLang === 'fr' ? 'Valable' : 'Valid';
-      const labelUntil = currentLang === 'de' ? 'bis' : currentLang === 'fr' ? 'au' : 'until';
-      const labelSource = currentLang === 'de' ? 'Quelle' : currentLang === 'fr' ? 'Source' : 'Source';
-      const levelLabel = currentLang === 'de' ? 'Stufe' : currentLang === 'fr' ? 'Niveau' : 'Level';
-      const detailsLinkText = currentLang === 'de' ? '🔗 Auf lu-alert.lu ansehen' : currentLang === 'fr' ? '🔗 Voir sur lu-alert.lu' : '🔗 View on lu-alert.lu';
-      const foodTitle = currentLang === 'de' ? '🍎 Lebensmittel- & Produktrückrufe (1)' : currentLang === 'fr' ? '🍎 Rappels d\'aliments et produits (1)' : '🍎 Food & Product Recalls (1)';
+        const category = info.getElementsByTagName("category")[0]?.textContent || "";
+        let isFoodRecall = category.toLowerCase() === "health";
+        
+        const eventCodes = info.getElementsByTagName("eventCode");
+        for (let code of eventCodes) {
+          if (code.getElementsByTagName("value")[0]?.textContent === "FOOD_RECALL") {
+            isFoodRecall = true;
+            break;
+          }
+        }
+
+        let levelCodeRaw = "N3";
+        const parameters = info.getElementsByTagName("parameter");
+        for (let param of parameters) {
+          const valName = param.getElementsByTagName("valueName")[0]?.textContent || "";
+          const val = param.getElementsByTagName("value")[0]?.textContent || "";
+          if (valName.includes("cb-eu-level")) {
+            if (val === "ALERT_LVL_1") levelCodeRaw = "N1";
+            else if (val === "ALERT_LVL_2") levelCodeRaw = "N2";
+            else if (val === "ALERT_LVL_3") levelCodeRaw = "N3";
+          }
+        }
+
+        let displayLevel = levelCodeRaw;
+        if (levelCodeRaw.startsWith("N")) {
+          if (currentLang === 'de') displayLevel = levelCodeRaw.replace("N", "S");
+          if (currentLang === 'en') displayLevel = levelCodeRaw.replace("N", "L");
+        }
+
+        const headline = info.getElementsByTagName("headline")[0]?.textContent || "Warnmeldung";
+        const description = info.getElementsByTagName("description")[0]?.textContent || "";
+        const effective = info.getElementsByTagName("effective")[0]?.textContent || "";
+        const expires = info.getElementsByTagName("expires")[0]?.textContent || "";
+        const sender = xmlDoc.getElementsByTagName("sender")[0]?.textContent || "LU-Alert";
+
+        let effectiveStr = effective;
+        try {
+          effectiveStr = new Date(effective).toLocaleString(localeSetting, {
+            day: '2-digit', month: '2-digit', year: 'numeric',
+            hour: '2-digit', minute: '2-digit'
+          });
+        } catch(e) {}
+
+        let expiresStr = expires;
+        try {
+          expiresStr = new Date(expires).toLocaleString(localeSetting, {
+            day: '2-digit', month: '2-digit', year: 'numeric',
+            hour: '2-digit', minute: '2-digit'
+          });
+        } catch(e) {}
+
+        const labelValid = currentLang === 'de' ? 'Gültig' : currentLang === 'fr' ? 'Valable' : 'Valid';
+        const labelUntil = currentLang === 'de' ? 'bis' : currentLang === 'fr' ? 'au' : 'until';
+        const labelSource = currentLang === 'de' ? 'Quelle' : currentLang === 'fr' ? 'Source' : 'Source';
+        const levelLabel = currentLang === 'de' ? 'Stufe' : currentLang === 'fr' ? 'Niveau' : 'Level';
+
+        const cardHtml = `
+          <article class="alert-card level-${levelCodeRaw}">
+            <div class="meta">
+              <span class="level-tag tag-${levelCodeRaw}">${levelLabel}: ${displayLevel}</span>
+              <span>${labelValid}: ${effectiveStr} — ${labelUntil} ${expiresStr}</span>
+              <span>${labelSource}: ${sender}</span>
+            </div>
+            <div class="headline">${headline}</div>
+            <div class="description">${description}</div>
+          </article>
+        `;
+
+        if (isFoodRecall) {
+          foodCardsHtml += cardHtml;
+          foodCount++;
+        } else {
+          primaryCardsHtml += cardHtml;
+        }
+      }
+
       const noEmergencyText = currentLang === 'de' ? 'Keine akuten Notfall- oder Unwetterwarnungen.' : currentLang === 'fr' ? 'Aucune alerte d\'urgence ou météo active.' : 'No active emergency or weather alerts.';
+      
+      if (primaryCardsHtml !== "") {
+        primaryContainer.innerHTML = primaryCardsHtml;
+      } else {
+        primaryContainer.innerHTML = `<div class="loading">${noEmergencyText}</div>`;
+      }
 
-      const cardHtml = `
-        <article class="alert-card level-${levelCodeRaw}">
-          <div class="meta">
-            <span class="level-tag tag-${levelCodeRaw}">${levelLabel}: ${displayLevel}</span>
-            <span>${labelValid}: ${effectiveStr} — ${labelUntil} ${expiresStr}</span>
-            <span>${labelSource}: ${sender}</span>
-          </div>
-          <div class="headline">${headline}</div>
-          <div class="description">${description}</div>
-          <div class="alert-footer">
-            <a href="https://www.lu-alert.lu" target="_blank" rel="noopener">${detailsLinkText}</a>
-          </div>
-        </article>
-      `;
-
-      if (isFoodRecall) {
+      if (foodCount > 0) {
+        const foodTitle = currentLang === 'de' 
+          ? `🍎 Lebensmittel- & Produktrückrufe (${foodCount})` 
+          : currentLang === 'fr' 
+          ? `🍎 Rappels d'aliments et produits (${foodCount})` 
+          : `🍎 Food & Product Recalls (${foodCount})`;
+        
         foodSection.style.display = "block";
         foodLabel.textContent = foodTitle;
-        foodContainer.innerHTML = cardHtml;
-        primaryContainer.innerHTML = `<div class="loading">${noEmergencyText}</div>`;
+        foodContainer.innerHTML = foodCardsHtml;
       } else {
         foodSection.style.display = "none";
-        primaryContainer.innerHTML = cardHtml;
       }
     }
 
