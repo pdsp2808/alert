@@ -35,7 +35,8 @@ tailwind.config = {
 <i data-lucide="triangle-alert" class="w-6 h-6"></i>
 </div>
 <div>
-<h1 class="text-lg font-bold leading-none text-gray-900 dark:text-white">LU-Alert Monitor</h1>
+<!-- Schriftgröße responsiv angepasst (text-base auf Handy, text-lg ab sm), damit es einzeilig bleibt -->
+<h1 class="text-base sm:text-lg font-bold leading-none text-gray-900 dark:text-white whitespace-nowrap">LU-Alert Monitor</h1>
 <div class="text-xs text-gray-500 dark:text-gray-400 mt-1 flex flex-col sm:flex-row sm:items-center sm:space-x-1.5">
 <a href="https://www.cisreisdorf.lu" target="_blank" rel="noopener noreferrer" class="hover:underline font-medium text-gray-700 dark:text-gray-300">CIS Reisdorf</a>
 <span class="hidden sm:inline">&bull;</span>
@@ -105,9 +106,9 @@ tailwind.config = {
 </div>
 <div id="forecast-container" class="hidden mt-3 flex gap-2 overflow-x-auto pb-1"></div>
 </div>
-<!-- Nahtlos verbundene Legende (Behoben: Dark-Mode-Hintergrund für den Inhalt) -->
+<!-- Nahtlos verbundene Legende (Behoben: dark:hover:bg-gray-700 hinzugefügt, damit es dunkel bleibt) -->
 <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden shadow-sm">
-<button onclick="toggleLegend()" class="w-full px-4 py-3 text-xs font-semibold text-gray-800 dark:text-gray-200 flex justify-between items-center bg-transparent hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
+<button onclick="toggleLegend()" class="w-full px-4 py-3 text-xs font-semibold text-gray-800 dark:text-gray-200 flex justify-between items-center bg-transparent hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
 <span id="legend-btn-text"> Warnstufen-Legende anzeigen</span>
 <span id="legend-icon">▼</span>
 </button>
