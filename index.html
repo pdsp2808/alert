@@ -35,7 +35,7 @@ tailwind.config = {
 <div onclick="triggerManualRefresh()" class="p-2 bg-blue-600 text-white rounded-lg shadow cursor-pointer hover:bg-blue-700 transition-colors" title="Seite aktualisieren">
 <i data-lucide="triangle-alert" class="w-6 h-6"></i>
 </div>
-<div class="flex flex-col space-y-0.5">
+<div class="flex flex-col space-y-0">
 <h1 class="text-base sm:text-lg font-bold leading-none text-gray-900 dark:text-white whitespace-nowrap">LU-Alert Monitor</h1>
 <div class="text-xs text-gray-500 dark:text-gray-400 flex flex-col sm:flex-row sm:items-center sm:space-x-1.5">
 <a href="https://www.cisreisdorf.lu" target="_blank" rel="noopener noreferrer" class="hover:underline font-medium text-gray-700 dark:text-gray-300">CIS Reisdorf</a>
@@ -533,18 +533,18 @@ function renderAlerts(xmlText) {
     const labelSource = currentLang === 'de' ? 'Quelle' : currentLang === 'fr' ? 'Source' : 'Source';
     const levelLabel = currentLang === 'de' ? 'Stufe' : currentLang === 'fr' ? 'Niveau' : 'Level';
     
-    let borderColor = 'border-l-yellow-600';
+    let borderColorHex = '#ca8a04'; // Gelb Standard
     let badgeColor = 'bg-yellow-600';
-    if (levelCodeRaw === 'N1') { borderColor = 'border-l-red-600'; badgeColor = 'bg-red-600'; }
-    else if (levelCodeRaw === 'N2') { borderColor = 'border-l-orange-600'; badgeColor = 'bg-orange-600'; }
-    else if (levelCodeRaw === 'D') { borderColor = 'border-l-purple-600'; badgeColor = 'bg-purple-600'; }
-    else if (levelCodeRaw === 'A') { borderColor = 'border-l-orange-500'; badgeColor = 'bg-orange-500'; }
-    else if (levelCodeRaw === 'I') { borderColor = 'border-l-lime-600'; badgeColor = 'bg-lime-600'; }
-    else if (levelCodeRaw === 'T') { borderColor = 'border-l-gray-600'; badgeColor = 'bg-gray-600'; }
+    if (levelCodeRaw === 'N1') { borderColorHex = '#dc2626'; badgeColor = 'bg-red-600'; }
+    else if (levelCodeRaw === 'N2') { borderColorHex = '#ea580c'; badgeColor = 'bg-orange-600'; }
+    else if (levelCodeRaw === 'D') { borderColorHex = '#9333ea'; badgeColor = 'bg-purple-600'; }
+    else if (levelCodeRaw === 'A') { borderColorHex = '#f97316'; badgeColor = 'bg-orange-500'; }
+    else if (levelCodeRaw === 'I') { borderColorHex = '#16a34a'; badgeColor = 'bg-lime-600'; }
+    else if (levelCodeRaw === 'T') { borderColorHex = '#4b5563'; badgeColor = 'bg-gray-600'; }
 
-    // border-l-4 garantiert, dass der farbige Rand im Tag- und Nachtmodus korrekt angezeigt wird
+    // Inline-Style für den linken Rand verwendet, damit der Rand im Nachtmodus garantiert farbig bleibt
     const cardHtml = `
-      <article class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5 shadow-sm border-l-4 ${borderColor} space-y-3">
+      <article class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5 shadow-sm border-l-4 space-y-3" style="border-left-color: ${borderColorHex};">
         <div class="flex flex-wrap items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
           <span class="px-2 py-0.5 rounded font-bold text-white ${badgeColor}">${levelLabel}: ${displayLevel}</span>
           <span class="bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded">${labelValid}: ${effectiveStr} ${labelUntil} ${expiresStr}</span>
