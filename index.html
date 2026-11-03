@@ -81,7 +81,7 @@ tailwind.config = {
 </div>
 <div class="mt-1">
 <select id="location-select" onchange="handleLocationChange()" class="bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-gray-700 rounded-md px-2 py-1 text-xs font-semibold focus:outline-none">
-<option value="49.85,6.27" selected>Reisdorf</option>
+<!-- Wird dynamisch gefüllt -->
 </select>
 </div>
 </div>
@@ -149,21 +149,47 @@ let currentLat = 49.85;
 let currentLon = 6.27;
 let activeForecastMode = null;
 let cachedWeatherData = null;
+
 const COMMUNE_DATA = {
   "Reisdorf": { lat: 49.85, lon: 6.27 },
-  "Diekirch": { lat: 49.86, lon: 6.15 },
+  "Luxemburg": { lat: 49.61, lon: 6.13 },
+  "Esch-sur-Alzette": { lat: 49.49, lon: 5.98 },
+  "Differdange": { lat: 49.52, lon: 5.89 },
+  "Dudelange": { lat: 49.48, lon: 6.08 },
   "Ettelbruck": { lat: 49.84, lon: 6.09 },
-  "Luxembourg": { lat: 49.61, lon: 6.13 },
-  "Echternach": { lat: 49.80, lon: 6.34 }
+  "Diekirch": { lat: 49.86, lon: 6.15 },
+  "Echternach": { lat: 49.80, lon: 6.34 },
+  "Grevenmacher": { lat: 49.68, lon: 6.44 },
+  "Remich": { lat: 49.54, lon: 6.36 },
+  "Wiltz": { lat: 49.96, lon: 5.93 },
+  "Clervaux": { lat: 50.05, lon: 6.03 },
+  "Vianden": { lat: 49.93, lon: 6.20 },
+  "Mersch": { lat: 49.75, lon: 6.10 },
+  "Redange": { lat: 49.75, lon: 5.89 },
+  "Capellen": { lat: 49.64, lon: 6.00 }
 };
 
 document.addEventListener('DOMContentLoaded', () => {
   initTheme();
+  initLocationSelect();
   lucide.createIcons();
   updateTexts();
   loadWeather(currentLat, currentLon);
   loadAlerts();
 });
+
+function initLocationSelect() {
+  const select = document.getElementById("location-select");
+  if (!select) return;
+  select.innerHTML = "";
+  for (const [name, coords] of Object.entries(COMMUNE_DATA)) {
+    const option = document.createElement("option");
+    option.value = `${coords.lat},${coords.lon}`;
+    option.textContent = name;
+    if (name === "Reisdorf") option.selected = true;
+    select.appendChild(option);
+  }
+}
 
 function initTheme() {
   const savedTheme = localStorage.getItem('theme');
@@ -419,18 +445,20 @@ function renderAlerts(xmlText) {
   const parser = new DOMParser();
   const xmlDoc = parser.parseFromString(xmlText, "text/xml");
   const infos = xmlDoc.getElementsByTagName("info");
+  
   if (infos.length === 0) {
     primaryContainer.innerHTML = "<div class='p-4 bg-white dark:bg-gray-800 rounded-xl text-gray-500 text-xs'>Aktuell liegen keine aktiven Warnungen vor.</div>";
     foodSection.style.display = "none";
     return;
   }
-  let primaryCardsHtml = "";
-  let foodCardsHtml = "";
-  let foodCount = 0;
+  
+  let alertsList = [];
   let localeSetting = currentLang === 'de' ? 'de-DE' : currentLang === 'fr' ? 'fr-FR' : 'en-US';
+  
   for (let info of infos) {
     const lang = info.getElementsByTagName("language")[0]?.textContent || "";
     if (!lang.toLowerCase().startsWith(currentLang)) continue;
+    
     const category = info.getElementsByTagName("category")[0]?.textContent || "";
     let isFoodRecall = category.toLowerCase() === "health";
     const eventCodes = info.getElementsByTagName("eventCode");
@@ -440,6 +468,7 @@ function renderAlerts(xmlText) {
         break;
       }
     }
+    
     let levelCodeRaw = "N3";
     const parameters = info.getElementsByTagName("parameter");
     for (let param of parameters) {
@@ -451,28 +480,37 @@ function renderAlerts(xmlText) {
         else if (val === "ALERT_LVL_3") levelCodeRaw = "N3";
       }
     }
+    
     let displayLevel = levelCodeRaw;
     if (levelCodeRaw.startsWith("N")) {
       if (currentLang === 'de') displayLevel = levelCodeRaw.replace("N", "S");
       if (currentLang === 'en') displayLevel = levelCodeRaw.replace("N", "L");
     }
+    
     const headline = info.getElementsByTagName("headline")[0]?.textContent || "Warnmeldung";
     const description = info.getElementsByTagName("description")[0]?.textContent || "";
     const effective = info.getElementsByTagName("effective")[0]?.textContent || "";
     const expires = info.getElementsByTagName("expires")[0]?.textContent || "";
     const sender = xmlDoc.getElementsByTagName("sender")[0]?.textContent || "LU-Alert";
+    
+    let effectiveDate = new Date(effective);
+    let effectiveTime = isNaN(effectiveDate.getTime()) ? 0 : effectiveDate.getTime();
+    
     let effectiveStr = effective;
     try {
-      effectiveStr = new Date(effective).toLocaleString(localeSetting, { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+      effectiveStr = effectiveDate.toLocaleString(localeSetting, { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
     } catch(e) {}
+    
     let expiresStr = expires;
     try {
       expiresStr = new Date(expires).toLocaleString(localeSetting, { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
     } catch(e) {}
+    
     const labelValid = currentLang === 'de' ? 'Gültig' : currentLang === 'fr' ? 'Valable' : 'Valid';
     const labelUntil = currentLang === 'de' ? 'bis' : currentLang === 'fr' ? 'au' : 'until';
     const labelSource = currentLang === 'de' ? 'Quelle' : currentLang === 'fr' ? 'Source' : 'Source';
     const levelLabel = currentLang === 'de' ? 'Stufe' : currentLang === 'fr' ? 'Niveau' : 'Level';
+    
     let borderColor = 'border-l-yellow-600';
     let badgeColor = 'bg-yellow-600';
     if (levelCodeRaw === 'N1') { borderColor = 'border-l-red-600'; badgeColor = 'bg-red-600'; }
@@ -492,19 +530,38 @@ function renderAlerts(xmlText) {
         <div class="text-base font-bold text-gray-900 dark:text-white">${headline}</div>
         <div class="text-sm text-gray-700 dark:text-gray-300 leading-relaxed space-y-2">${description}</div>
       </article>`;
-    if (isFoodRecall) {
-      foodCardsHtml += cardHtml;
+      
+    alertsList.push({
+      isFoodRecall,
+      effectiveTime,
+      cardHtml
+    });
+  }
+
+  // Neueste Meldung zuerst (absteigend nach Datum sortieren)
+  alertsList.sort((a, b) => b.effectiveTime - a.effectiveTime);
+
+  let primaryCardsHtml = "";
+  let foodCardsHtml = "";
+  let foodCount = 0;
+
+  for (let item of alertsList) {
+    if (item.isFoodRecall) {
+      foodCardsHtml += item.cardHtml;
       foodCount++;
     } else {
-      primaryCardsHtml += cardHtml;
+      primaryCardsHtml += item.cardHtml;
     }
   }
+
   const noEmergencyText = currentLang === 'de' ? 'Keine akuten Notfall- oder Unwetterwarnungen.' : currentLang === 'fr' ? 'Aucune alerte d\'urgence ou météo active.' : 'No active emergency or weather alerts.';
+  
   if (primaryCardsHtml !== "") {
     primaryContainer.innerHTML = primaryCardsHtml;
   } else {
     primaryContainer.innerHTML = `<div class="p-4 bg-white dark:bg-gray-800 rounded-xl text-gray-500 text-xs">${noEmergencyText}</div>`;
   }
+  
   if (foodCount > 0) {
     const foodTitle = currentLang === 'de' ? `Lebensmittel- & Produktrückrufe (${foodCount})` : currentLang === 'fr' ? `Rappels d'aliments et produits (${foodCount})` : `Food & Product Recalls (${foodCount})`;
     foodSection.style.display = "block";
@@ -513,6 +570,7 @@ function renderAlerts(xmlText) {
   } else {
     foodSection.style.display = "none";
   }
+  
   lucide.createIcons();
 }
 </script>
