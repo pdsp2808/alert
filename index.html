@@ -23,6 +23,7 @@ tailwind.config = {
 <style>
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-thumb { background: rgba(156, 163, 175, 0.5); border-radius: 3px; }
+summary::-webkit-details-marker { display: none; }
 </style>
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-100 min-h-screen flex flex-col font-sans transition-colors duration-200">
@@ -542,17 +543,42 @@ function renderAlerts(xmlText) {
     else if (levelCodeRaw === 'I') { borderColorHex = '#16a34a'; badgeColor = 'bg-lime-600'; }
     else if (levelCodeRaw === 'T') { borderColorHex = '#4b5563'; badgeColor = 'bg-gray-600'; }
 
-    // Inline-Style für den linken Rand verwendet, damit der Rand im Nachtmodus garantiert farbig bleibt
-    const cardHtml = `
-      <article class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5 shadow-sm border-l-4 space-y-3" style="border-left-color: ${borderColorHex};">
-        <div class="flex flex-wrap items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-          <span class="px-2 py-0.5 rounded font-bold text-white ${badgeColor}">${levelLabel}: ${displayLevel}</span>
-          <span class="bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded">${labelValid}: ${effectiveStr} ${labelUntil} ${expiresStr}</span>
-          <span class="bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded">${labelSource}: ${sender}</span>
-        </div>
-        <div class="text-base font-bold text-gray-900 dark:text-white">${headline}</div>
-        <div class="text-sm text-gray-700 dark:text-gray-300 leading-relaxed space-y-2">${description}</div>
-      </article>`;
+    let cardHtml = "";
+    
+    if (isFoodRecall) {
+      // Einzelne Lebensmittelrückrufe als aufklappbare <details>-Elemente (standardmäßig zugeklappt)
+      cardHtml = `
+        <details class="group bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5 shadow-sm border-l-4 transition-colors" style="border-left-color: ${borderColorHex};">
+          <summary class="cursor-pointer list-none flex items-start justify-between gap-4 focus:outline-none">
+            <div class="space-y-2 flex-1">
+              <div class="flex flex-wrap items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                <span class="px-2 py-0.5 rounded font-bold text-white ${badgeColor}">${levelLabel}: ${displayLevel}</span>
+                <span class="bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded">${labelValid}: ${effectiveStr} ${labelUntil} ${expiresStr}</span>
+                <span class="bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded">${labelSource}: ${sender}</span>
+              </div>
+              <div class="text-base font-bold text-gray-900 dark:text-white">${headline}</div>
+            </div>
+            <div class="text-gray-400 group-open:rotate-180 transition-transform shrink-0 pt-1 text-xs">
+              ▼
+            </div>
+          </summary>
+          <div class="mt-4 pt-3 border-t border-gray-200 dark:border-gray-700 text-sm text-gray-700 dark:text-gray-300 leading-relaxed space-y-2">
+            ${description}
+          </div>
+        </details>`;
+    } else {
+      // Normale Notfallmeldungen bleiben wie gewohnt
+      cardHtml = `
+        <article class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5 shadow-sm border-l-4 space-y-3" style="border-left-color: ${borderColorHex};">
+          <div class="flex flex-wrap items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+            <span class="px-2 py-0.5 rounded font-bold text-white ${badgeColor}">${levelLabel}: ${displayLevel}</span>
+            <span class="bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded">${labelValid}: ${effectiveStr} ${labelUntil} ${expiresStr}</span>
+            <span class="bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded">${labelSource}: ${sender}</span>
+          </div>
+          <div class="text-base font-bold text-gray-900 dark:text-white">${headline}</div>
+          <div class="text-sm text-gray-700 dark:text-gray-300 leading-relaxed space-y-2">${description}</div>
+        </article>`;
+    }
       
     alertsList.push({
       isFoodRecall,
