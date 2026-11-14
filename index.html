@@ -492,7 +492,7 @@ function renderAlerts(xmlText) {
       }
     }
     
-    // Ermittlung des korrekten Level-Codes aus Parametern oder Fallbacks
+    // Ermittlung des korrekten Level-Codes (unterstützt jetzt auch ALERT_LVL_4 / Level 4 als 'I')
     let levelCodeRaw = "N3";
     const parameters = info.getElementsByTagName("parameter");
     let foundLevelParam = false;
@@ -504,10 +504,11 @@ function renderAlerts(xmlText) {
         if (val === "ALERT_LVL_1") levelCodeRaw = "N1";
         else if (val === "ALERT_LVL_2") levelCodeRaw = "N2";
         else if (val === "ALERT_LVL_3") levelCodeRaw = "N3";
+        else if (val === "ALERT_LVL_4" || val === "4") levelCodeRaw = "I";
       }
     }
 
-    // Falls kein cb-eu-level Parameter existiert, prüfen wir andere Merkmale (z.B. eventCode oder Sende-Details)
+    // Fallbacks falls kein cb-eu-level Parameter existiert
     if (!foundLevelParam) {
       const eventText = info.getElementsByTagName("event")[0]?.textContent || "";
       const headlineText = info.getElementsByTagName("headline")[0]?.textContent || "";
