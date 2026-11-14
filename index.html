@@ -492,15 +492,31 @@ function renderAlerts(xmlText) {
       }
     }
     
+    // Ermittlung des korrekten Level-Codes aus Parametern oder Fallbacks
     let levelCodeRaw = "N3";
     const parameters = info.getElementsByTagName("parameter");
+    let foundLevelParam = false;
     for (let param of parameters) {
       const valName = param.getElementsByTagName("valueName")[0]?.textContent || "";
       const val = param.getElementsByTagName("value")[0]?.textContent || "";
       if (valName.includes("cb-eu-level")) {
+        foundLevelParam = true;
         if (val === "ALERT_LVL_1") levelCodeRaw = "N1";
         else if (val === "ALERT_LVL_2") levelCodeRaw = "N2";
         else if (val === "ALERT_LVL_3") levelCodeRaw = "N3";
+      }
+    }
+
+    // Falls kein cb-eu-level Parameter existiert, prüfen wir andere Merkmale (z.B. eventCode oder Sende-Details)
+    if (!foundLevelParam) {
+      const eventText = info.getElementsByTagName("event")[0]?.textContent || "";
+      const headlineText = info.getElementsByTagName("headline")[0]?.textContent || "";
+      const combinedCheck = (eventText + " " + headlineText).toLowerCase();
+      
+      if (category.toLowerCase() === "safety" && combinedCheck.includes("information")) {
+        levelCodeRaw = "I";
+      } else if (combinedCheck.includes("test")) {
+        levelCodeRaw = "T";
       }
     }
     
