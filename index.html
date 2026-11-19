@@ -290,7 +290,6 @@ function updateTexts() {
   const btnText = document.getElementById("legend-btn-text");
   const isClosed = document.getElementById("legend-content").classList.contains("hidden");
   
-  // Legenden-Badges je nach Sprache anpassen
   document.getElementById("badge-d").textContent = (currentLang === 'de') ? 'G' : 'D';
   document.getElementById("badge-n1").textContent = currentLang === 'de' ? 'S1' : currentLang === 'en' ? 'L1' : 'N1';
   document.getElementById("badge-n2").textContent = currentLang === 'de' ? 'S2' : currentLang === 'en' ? 'L2' : 'N2';
@@ -482,13 +481,17 @@ function renderAlerts(xmlText) {
     return;
   }
 
-  const normalizeForDedupe = (str = "") =>
-    str
+  // Normalisiert Text für Vergleiche (entfernt HTML, Sonderzeichen/Zahlen-Variationen und Mehrfach-Leerzeichen)
+  const normalizeForDedupe = (str = "", stripNumbers = false) => {
+    let out = str
       .replace(/<[^>]+>/g, " ")
       .replace(/&[a-zA-Z0-9#]+;/g, " ")
-      .replace(/\s+/g, " ")
-      .trim()
       .toLowerCase();
+    if (stripNumbers) {
+      out = out.replace(/[0-9./:-]+/g, " ");
+    }
+    return out.replace(/[^\p{L}\p{N}\s]+/gu, " ").replace(/\s+/g, " ").trim();
+  };
 
   let alertsList = [];
   const seenKeys = new Set();
@@ -524,20 +527,6 @@ function renderAlerts(xmlText) {
     const effective = infoEl.getElementsByTagName("effective")[0]?.textContent || "";
     const expires = infoEl.getElementsByTagName("expires")[0]?.textContent || "";
     const sender = alertSender || xmlDoc.getElementsByTagName("sender")[0]?.textContent || "LU-Alert";
-
-    // Deduplizierung in der aktuellen Sprache:
-    // Verhindert doppelte Karten bei mehreren <info>-Blöcken zum selben Vorfall
-    const dedupeKey = [
-      currentLang,
-      normalizeForDedupe(eventText),
-      normalizeForDedupe(headline),
-      normalizeForDedupe(description)
-    ].join("||");
-
-    if (seenKeys.has(dedupeKey)) {
-      continue;
-    }
-    seenKeys.add(dedupeKey);
 
     let isFoodRecall = category.toLowerCase() === "health";
     const eventCodes = infoEl.getElementsByTagName("eventCode");
@@ -588,6 +577,20 @@ function renderAlerts(xmlText) {
     ) {
       levelCodeRaw = "A";
     }
+
+    // Deduplizierung pro Sprache:
+    // - Bei Nicht-Rückrufen (z. B. Regen/Unwetter): gleiches Event + gleiche Warnstufe + normalisierte Headline
+    // - Bei Rückrufen: gleiches Event + normalisierte Headline (ohne Zeit-/Lot-Abweichungen)
+    const normEvent = normalizeForDedupe(eventText);
+    const normHeadline = normalizeForDedupe(headline, true);
+    const dedupeKey = isFoodRecall
+      ? `${currentLang}||food||${normEvent}||${normHeadline}`
+      : `${currentLang}||alert||${normEvent}||${levelCodeRaw}||${normHeadline}`;
+
+    if (seenKeys.has(dedupeKey)) {
+      continue;
+    }
+    seenKeys.add(dedupeKey);
 
     let typeLabel = "";
     if (levelCodeRaw === "D") {
